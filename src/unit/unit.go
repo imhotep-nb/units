@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	nBaseUnits = 10
+	nBaseUnits = 11
 )
 
 const (
@@ -21,16 +21,18 @@ const (
 	candela
 	mole
 	radian
+	steradian
 	currency
 	byte
 	second
+	// when inserting a new base unit, then also update baseSymbols below
 )
 
 var (
 	DefaultFormat            = "%.4f %s"
 	UndefinedUnit            = unit{"?", 1, emptyExponents()}
 	symbolRx                 *regexp.Regexp
-	baseSymbols              = []string{"m", "kg", "K", "A", "cd", "mol", "rad", "¤", "byte", "s"}
+	baseSymbols              = []string{"m", "kg", "K", "A", "cd", "mol", "rad", "sr", "¤", "byte", "s"}
 	PanicOnIncompatibleUnits = os.Getenv("GOUNITSPANIC") == "1"
 )
 
@@ -130,7 +132,6 @@ func get(symbol string) *unit {
 			u = &UndefinedUnit
 		} else {
 			u = m.unit
-			fmt.Println("encaching", u)
 			units[u.symbol] = u // cache it
 		}
 	}
@@ -185,7 +186,7 @@ func ParseSymbol(s string) (Measurement, error) {
 				}
 				mSI = Power(mSI, int8(x))
 				//fmt.Println("x", x, "m^x", mSI.Format("%f %s"))
-			}			
+			}
 			if i == 0 {
 				resultSI = Mult(resultSI, mSI)
 			} else {
@@ -204,7 +205,7 @@ func Define(symbol string, factor float64, base string) (float64, error) {
 	if _, found := units[symbol]; found {
 		return 0, errors.New("duplicate symbol [" + symbol + "]")
 	}
-	mBase, err := ParseSymbol(base);
+	mBase, err := ParseSymbol(base)
 	if err != nil {
 		return 0, err
 	}
@@ -212,7 +213,6 @@ func Define(symbol string, factor float64, base string) (float64, error) {
 	units[symbol] = &unit{symbol, siFactor, mBase.exponents}
 	return siFactor, nil
 }
-
 
 func init() {
 	fmt.Print()
