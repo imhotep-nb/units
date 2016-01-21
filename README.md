@@ -49,6 +49,9 @@ Here are some usage examples:
 	
 // return a measurement with the given unit; calculate new conversion factor.
 	measurement, err := unit.ParseSymbol("psi.kg-1")
+	
+// parse user input
+	measurement, err := unit.Parse(" -1,234,566.88 sq in/min  ")
 
 ```
 There are more functions and methods. See `measurement.go` and `unit.go`.
@@ -74,6 +77,6 @@ for currency conversions, but I still have to do some work on handling dynamic f
  * add degrees C and F and special conversions for these (formulas are not captured by simple factor)
  * godoc documentation
  * make Measurement sortable
- * parseing/printing of unitless
+ * parsing/printing of unitless
 
 
