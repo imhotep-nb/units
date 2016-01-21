@@ -1,8 +1,11 @@
 package unit
 
 import (
+	"errors"
 	"fmt"
 	"math"
+	"strconv"
+	"strings"
 )
 
 type Measurement struct {
@@ -53,11 +56,38 @@ func (m Measurement) In(u string) Measurement {
 }
 
 func M(value float64, symbol string) Measurement {
-	return Measurement{value, get(symbol)}
+	u := get(symbol)
+	if u == &UndefinedUnit {
+		panic(fmt.Sprintf("undefined unit: %s", symbol))
+	}
+	return Measurement{value, u}
+}
+
+func Parse(s string) (Measurement, error) {
+	undef := Measurement{0, &UndefinedUnit}
+	match := muRx.FindStringSubmatch(s)
+	if len(match) != 3 {
+		return undef, errors.New("invalid measurement format [" + s + "]")
+	}
+	f := match[1]
+	if strings.Count(f, ".") > 1 {
+		return undef, errors.New("more than one decimal point in [" + s + "]")
+	}
+	f = strings.Replace(f, ",", "", -1)
+	value, err := strconv.ParseFloat(f, 64)
+	if err != nil {
+		return undef, err
+	}
+	sym := strings.Trim(match[2], " \r\n\t")
+	mu, err := ParseSymbol(sym)
+	if err != nil {
+		return undef, err
+	}
+	return Measurement{value, mu.unit}, nil
 }
 
 func (m Measurement) Invalid() bool {
-	return m.unit == nil
+	return m.unit == nil || m.unit == &UndefinedUnit
 }
 
 func SameUnit(a, b Measurement) bool {
@@ -150,13 +180,28 @@ func Equal(a, b, epsilon Measurement) bool {
 	return Abs(Subtract(a, b)).value < epsilon.value*epsilon.factor
 }
 
+func More(a, b Measurement) bool {
+	check(a, b)
+	return a.ToSI().Value() > b.ToSI().Value()
+}
+
+func Less(a, b Measurement) bool {
+	check(a, b)
+	return a.ToSI().Value() < b.ToSI().Value()
+}
+
 func (m Measurement) ToSI() Measurement {
 	factor, u := m.toSI()
 	return Measurement{m.value * factor, &u}
 }
 
-
 func (m *Measurement) Normalize() {
 	m.value *= m.factor
 	m.unit = &unit{makeSymbol(m.exponents), 1, m.exponents}
 }
+
+type MeasurementSlice []Measurement
+
+func (a MeasurementSlice) Len() int           { return len(a) }
+func (a MeasurementSlice) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a MeasurementSlice) Less(i, j int) bool { return Less(a[i], a[j]) }

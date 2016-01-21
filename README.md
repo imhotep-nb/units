@@ -72,5 +72,8 @@ for currency conversions, but I still have to do some work on handling dynamic f
  * conversion of unit.M(x, "s") to existing time.Duration
  * add degrees/minutes/seconds parsing
  * add degrees C and F and special conversions for these (formulas are not captured by simple factor)
+ * godoc documentation
+ * make Measurement sortable
+ * parseing/printing of unitless
 
 

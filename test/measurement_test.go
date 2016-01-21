@@ -2,11 +2,10 @@ package t
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"unit"
-	"os"
 )
-
 
 func TestPanic(t *testing.T) {
 	enablePanic := os.Getenv("GOUNITSPANIC") == "1"
@@ -22,6 +21,13 @@ func TestPanic(t *testing.T) {
 	}
 }
 
+func TestInvalid(t *testing.T) {
+	defer func() {
+		recover()
+	}()
+	m := unit.M(0, "bla")
+	t.Error(m.Inspect())
+}
 
 func TestIn(t *testing.T) {
 	data := []struct {
@@ -176,7 +182,7 @@ func TestCalc3(t *testing.T) {
 	expected = "24.1341 m.s-1"
 	if result.String() != expected {
 		t.Error("expected:", expected, "actual:", result.String())
-	}	
+	}
 }
 
 func TestMixedUnits(t *testing.T) {
@@ -207,7 +213,7 @@ func TestPer(t *testing.T) {
 	p5 := unit.M(5, "N")
 	if !unit.SameUnit(p4, p5) {
 		t.Error("incompatible:", p4, "<>", p5)
-	}	
+	}
 	p6 := unit.M(6, "W")
 	p7 := unit.M(7, "J/s")
 	if !unit.SameUnit(p6, p7) {
@@ -241,6 +247,44 @@ func TestNormalize(t *testing.T) {
 	}
 }
 
+func TestParse(t *testing.T) {
+	p1 := unit.M(12.4, "km.s-2")
+	p2, err := unit.Parse("12.4 km/s2")
+	if err != nil {
+		t.Error(err)
+	} else if !unit.Equal(p1, p2, unit.M(0.01, "m.s-2")) {
+		t.Error("not equal", p1, "<>", p2)
+	}
+	p3 := unit.M(3894829.88, "sq in")
+	p4, err := unit.Parse("  3,894,829.88sq in   ")
+	if err != nil {
+		t.Error(err)
+	} else if !unit.Equal(p3, p4, unit.M(0.001, "sq in")) {
+		t.Error("not equal", p3, "<>", p4)
+	}
+}
 
-
-
+func TestParse2(t *testing.T) {
+	data := []struct {
+		s    string
+		fail bool
+	}{
+		{"38J", false},
+		{"  -15.5  K  ", false},
+		{"1,000 kW/sr", false},
+		{"foo", true},
+		{"/12309.8m", true},
+		{"12,058,884.881 N/m2", false},
+		{"5 chickens/m2", true},
+		{"1.1 sq in", false},
+		{"5.5.6 m", true},
+	}
+	for _, d := range data {
+		_, err := unit.Parse(d.s)
+		if err != nil && !d.fail {
+			t.Error("failed but shouldn't: [", d.s, "]")
+		} else if err == nil && d.fail {
+			t.Error("should fail but didn't: [", d.s, "]")
+		}
+	}
+}

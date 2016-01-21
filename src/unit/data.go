@@ -29,6 +29,7 @@ func setup() []*unit {
 	money := def(expMap{currency: 1})
 	power := def(expMap{kilogram: 1, metre: 2, second: -3})
 	pressure := def(expMap{kilogram: 1, metre: -1, second: -2})
+	solidAngle := def(expMap{steradian: 1})
 	speed := def(expMap{metre: 1, second: -1})
 	temperature := def(expMap{kelvin: 1})
 	voltage := def(expMap{metre: 2, kilogram: 1, second: -3, ampere: -1})
@@ -112,13 +113,16 @@ func setup() []*unit {
 		money("USD", 1),
 		money("NZD", 1.57),
 
-		power("W", 1),           // watt
+		power("W", 1), // watt
+		power("kW", 1000),
 		power("hp", 745.699872), // horsepower
 
 		pressure("Pa", 1),
 		pressure("psi", 6894.75729),
 		pressure("bar", 1e5),
 		pressure("mmHg", 133.322387415),
+
+		solidAngle("sr", 1),
 
 		speed("m/s", 1),
 		speed("kph", 1000.0/3600.0),

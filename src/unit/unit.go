@@ -31,9 +31,9 @@ const (
 var (
 	DefaultFormat            = "%.4f %s"
 	UndefinedUnit            = unit{"?", 1, emptyExponents()}
-	symbolRx                 *regexp.Regexp
 	baseSymbols              = []string{"m", "kg", "K", "A", "cd", "mol", "rad", "sr", "¤", "byte", "s"}
 	PanicOnIncompatibleUnits = os.Getenv("GOUNITSPANIC") == "1"
+	symbolRx, muRx           *regexp.Regexp
 )
 
 type unit struct {
@@ -217,6 +217,7 @@ func Define(symbol string, factor float64, base string) (float64, error) {
 func init() {
 	fmt.Print()
 	symbolRx = regexp.MustCompile(`^([^\d-]+)(-?\d+)?$`)
+	muRx = regexp.MustCompile(`^\s*(-?[\d.,]+)\s*(.*)$`)
 
 	data := setup()
 	for _, value := range data {
