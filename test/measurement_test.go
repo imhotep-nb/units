@@ -162,9 +162,9 @@ func TestCalc2(t *testing.T) {
 		var result unit.Measurement
 		switch d.op {
 		case "*":
-			result = unit.MultF(d.m, d.f)
+			result = unit.MultFac(d.m, d.f)
 		case "/":
-			result = unit.DivF(d.m, d.f)
+			result = unit.DivFac(d.m, d.f)
 		case "^":
 			result = unit.Power(d.m, int8(d.f))
 		}
@@ -175,12 +175,12 @@ func TestCalc2(t *testing.T) {
 }
 
 func TestCalc3(t *testing.T) {
-	result := unit.AddN(unit.M(5.1, "Pa"), unit.M(0.3, "N.m-2"), unit.M(0.11, "m-2.N"))
+	result := unit.Sum(unit.M(5.1, "Pa"), unit.M(0.3, "N.m-2"), unit.M(0.11, "m-2.N"))
 	expected := "5.5100 m-1.kg.s-2"
 	if result.String() != expected {
 		t.Error("expected:", expected, "actual:", result.String())
 	}
-	result = unit.SubtractN(unit.M(100, "kph"), unit.M(7, "mph"), unit.M(1, "kn"))
+	result = unit.Diff(unit.M(100, "kph"), unit.M(7, "mph"), unit.M(1, "kn"))
 	expected = "24.1341 m.s-1"
 	if result.String() != expected {
 		t.Error("expected:", expected, "actual:", result.String())
@@ -317,5 +317,18 @@ func TestDuration(t *testing.T) {
 	}
 	if t2.Hours() != 36 {
 		t.Error("expected:", 36, "actual:", t2.Hours())
+	}
+}
+
+func TestPrefix(t *testing.T) {
+	m1 := unit.M(25 * unit.Centi, "m")
+	m2 := unit.M(25, "cm")
+	if !unit.Equal(m1, m2, unit.M(1e-6, "m")) {
+		t.Error("not equal:", m1, m2)
+	}
+	m3 := unit.M(7 * unit.Cubic(unit.Deci), "m3") 
+	m4 := unit.M(7, "L")
+	if !unit.AreCompatible(m3, m4) || !unit.Equal(m3, m4, unit.M(1e-6, "m")) {
+		t.Error("not equal:", m3, m4)
 	}
 }

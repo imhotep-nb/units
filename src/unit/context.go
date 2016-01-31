@@ -33,7 +33,6 @@ func DeleteContext(c *Context) {
 	delete(contexts, c.Name)
 }
 
-
 func (ctx Context) M(value float64, symbol string) Measurement {
 	m := M(value, symbol)
 	return ctx.Convert(m)
