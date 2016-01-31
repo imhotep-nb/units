@@ -9,9 +9,6 @@ import (
 	"strings"
 )
 
-const (
-	nBaseUnits = 11
-)
 
 const (
 	metre = iota
@@ -28,10 +25,14 @@ const (
 	// when inserting a new base unit, then also update baseSymbols below
 )
 
+const (
+	nBaseUnits = 11
+)
+
 var (
 	DefaultFormat            = "%.4f %s"
 	UndefinedUnit            = unit{"?", 1, emptyExponents()}
-	baseSymbols              = []string{"m", "kg", "K", "A", "cd", "mol", "rad", "sr", "¤", "byte", "s"}
+	baseSymbols              = [nBaseUnits]string{"m", "kg", "K", "A", "cd", "mol", "rad", "sr", "¤", "byte", "s"}
 	PanicOnIncompatibleUnits = os.Getenv("GOUNITSPANIC") == "1"
 	symbolRx, muRx           *regexp.Regexp
 )
@@ -45,7 +46,7 @@ type unit struct {
 type expMap map[int]int8
 
 func exp(u expMap) []int8 {
-	d := [nBaseUnits]int8{}
+	d := [len(baseSymbols)]int8{}
 	for k, v := range u {
 		d[k] = v
 	}
@@ -138,7 +139,7 @@ func get(symbol string) *unit {
 	return u
 }
 
-func isCompatible(x, y []int8) bool {
+func haveSameExponents(x, y []int8) bool {
 	for i, _ := range x {
 		if x[i] != y[i] {
 			return false
@@ -215,7 +216,7 @@ func Define(symbol string, factor float64, base string) (float64, error) {
 }
 
 func init() {
-	fmt.Print()
+	fmt.Print("")
 	symbolRx = regexp.MustCompile(`^([^\d-]+)(-?\d+)?$`)
 	muRx = regexp.MustCompile(`^\s*(-?[\d.,]+)\s*(.*)$`)
 

@@ -67,3 +67,4 @@ func TestMinMax(t *testing.T) {
 		t.Error("upper bound wrong")
 	}
 }
+

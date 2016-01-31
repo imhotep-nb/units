@@ -21,14 +21,14 @@ type resource struct {
 }
 
 func New(min unit.Measurement, max unit.Measurement) Resource {
-	if unit.SameUnit(min, max) && unit.Less(min, max) {
+	if unit.AreCompatible(min, max) && unit.Less(min, max) {
 		return &resource{min, max, min}
 	}
 	return nil
 }
 
 func (h *resource) Set(m unit.Measurement) bool {
-	if !unit.SameUnit(h.balance, m) || h.outOfBounds(m) {
+	if !unit.AreCompatible(h.balance, m) || h.outOfBounds(m) {
 		return false
 	}
 	h.balance = m
@@ -36,7 +36,7 @@ func (h *resource) Set(m unit.Measurement) bool {
 }
 
 func (h *resource) Deposit(m unit.Measurement) bool {
-	if !unit.SameUnit(h.balance, m) {
+	if !unit.AreCompatible(h.balance, m) {
 		return false
 	}
 	n := unit.Add(h.balance, m)
@@ -48,7 +48,7 @@ func (h *resource) Deposit(m unit.Measurement) bool {
 }
 
 func (h *resource) Withdraw(m unit.Measurement) bool {
-	if !unit.SameUnit(h.balance, m) {
+	if !unit.AreCompatible(h.balance, m) {
 		return false
 	}
 	n := unit.Subtract(h.balance, m)

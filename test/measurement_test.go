@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 	"unit"
+	"sort"
+	"time"
 )
 
 func TestPanic(t *testing.T) {
@@ -188,7 +190,7 @@ func TestCalc3(t *testing.T) {
 func TestMixedUnits(t *testing.T) {
 	p1 := unit.M(7, "N.m-2")
 	p2 := unit.M(8, "Pa")
-	if unit.SameUnit(p1, p2) {
+	if unit.AreCompatible(p1, p2) {
 		p3 := unit.Add(p1, p2)
 		const result = "15.0000 m-1.kg.s-2"
 		if p3.String() != result {
@@ -203,20 +205,20 @@ func TestPer(t *testing.T) {
 	p1 := unit.M(1, "km/h")
 	p2 := unit.M(2, "kph")
 	p3 := unit.M(3, "m/s")
-	if !unit.SameUnit(p1, p2) {
+	if !unit.AreCompatible(p1, p2) {
 		t.Error("incompatible:", p1, "<>", p2)
 	}
-	if !unit.SameUnit(p2, p3) {
+	if !unit.AreCompatible(p2, p3) {
 		t.Error("incompatible:", p2, "<>", p3)
 	}
 	p4 := unit.M(4, "kg.m/s2")
 	p5 := unit.M(5, "N")
-	if !unit.SameUnit(p4, p5) {
+	if !unit.AreCompatible(p4, p5) {
 		t.Error("incompatible:", p4, "<>", p5)
 	}
 	p6 := unit.M(6, "W")
 	p7 := unit.M(7, "J/s")
-	if !unit.SameUnit(p6, p7) {
+	if !unit.AreCompatible(p6, p7) {
 		t.Error("same unit:", p6, p7)
 	}
 	p8 := unit.Subtract(unit.M(8.8, "N.m/s"), unit.M(8.8, "W"))
@@ -286,5 +288,34 @@ func TestParse2(t *testing.T) {
 		} else if err == nil && d.fail {
 			t.Error("should fail but didn't: [", d.s, "]")
 		}
+	}
+}
+
+
+func TestSort(t *testing.T) {
+	arr := unit.MeasurementSlice{
+		unit.M(0.2, "M"),
+		unit.M(-3, "m"),
+		unit.M(-1.5, "m"),
+		unit.M(0.1, "cm"),
+		unit.M(0.1, "mm"),
+		unit.M(4, "ft"),
+	}
+	sort.Sort(arr)
+	sa := fmt.Sprintf("%v", arr)
+	if  sa != "[-3.0000 m -1.5000 m 0.1000 mm 0.1000 cm 4.0000 ft 0.2000 M]" {
+		t.Error("sort error", sa)
+	}
+}
+
+func TestDuration(t *testing.T) {
+	var t1 unit.Measurement = unit.M(1.5, "d")
+	var t2 time.Duration
+	t2, err := unit.Duration(t1)
+	if err != nil {
+		t.Error(err)
+	}
+	if t2.Hours() != 36 {
+		t.Error("expected:", 36, "actual:", t2.Hours())
 	}
 }

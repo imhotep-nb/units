@@ -6,6 +6,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Measurement struct {
@@ -42,7 +43,7 @@ func (m Measurement) Value() float64 {
 // Unit conversion
 func (m Measurement) ConvertTo(u string) (Measurement, bool) {
 	target := get(u)
-	compatible := isCompatible(m.exponents, target.exponents)
+	compatible := haveSameExponents(m.exponents, target.exponents)
 	if target == nil || !compatible {
 		return Measurement{}, false
 	}
@@ -87,15 +88,19 @@ func Parse(s string) (Measurement, error) {
 }
 
 func (m Measurement) Invalid() bool {
-	return m.unit == nil || m.unit == &UndefinedUnit
+	return m.unit == nil
 }
 
-func SameUnit(a, b Measurement) bool {
-	return isCompatible(a.exponents, b.exponents)
+func AreCompatible(a, b Measurement) bool {
+	return haveSameExponents(a.exponents, b.exponents)
+}
+
+func (m Measurement) HasCompatibleUnit(symbol string) bool {
+	return haveSameExponents(m.exponents, get(symbol).exponents)
 }
 
 func check(a, b Measurement) {
-	if PanicOnIncompatibleUnits && !isCompatible(a.exponents, b.exponents) {
+	if PanicOnIncompatibleUnits && !haveSameExponents(a.exponents, b.exponents) {
 		panic(fmt.Sprintf("units not compatible: %q <> %q", a, b))
 	}
 }
@@ -200,8 +205,27 @@ func (m *Measurement) Normalize() {
 	m.unit = &unit{makeSymbol(m.exponents), 1, m.exponents}
 }
 
+
+func Duration(m Measurement) (time.Duration, error) {
+	if si, ok := m.ConvertTo("s"); ok {
+		return time.Duration(si.Value()) * time.Second, nil
+	}
+	return time.Duration(0), errors.New("not a Duration: " + m.String())
+}
+
+// Slice of Measurements. Useful for sorting.
 type MeasurementSlice []Measurement
 
-func (a MeasurementSlice) Len() int           { return len(a) }
-func (a MeasurementSlice) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a MeasurementSlice) Less(i, j int) bool { return Less(a[i], a[j]) }
+func (a MeasurementSlice) Len() int {
+	return len(a)
+}
+
+func (a MeasurementSlice) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
+func (a MeasurementSlice) Less(i, j int) bool {
+	return Less(a[i], a[j])
+}
+
+
