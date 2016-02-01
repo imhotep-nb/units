@@ -1,5 +1,5 @@
 // Package unit provides a way to express and work with physical quantities, or measurements.
-// A Measurement consists of a value and a unit.
+// A Quantity consists of a value and a unit.
 package unit
 
 import (
@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	metre = iota
+	meter = iota
 	kilogram
 	kelvin
 	ampere
@@ -168,11 +168,11 @@ func get(symbol string) *unit {
 	u := units[symbol]
 	//fmt.Println("found in cache [", symbol, "] -> ", u)
 	if u == nil {
-		m, err := ParseSymbol(symbol)
+		q, err := ParseSymbol(symbol)
 		if err != nil {
 			u = &UndefinedUnit
 		} else {
-			u = m.unit
+			u = q.unit
 			units[u.symbol] = u // cache it
 		}
 	}
@@ -200,8 +200,8 @@ func (u unit) toSI() (factor float64, si unit) {
 }
 
 
-func ParseSymbol(s string) (Measurement, error) {
-	resultSI := Measurement{1.0, units[""]}
+func ParseSymbol(s string) (Quantity, error) {
+	resultSI := Quantity{1.0, units[""]}
 	parts := strings.Split(s, "/")
 	if len(parts) > 2 {
 		return resultSI, errors.New("more than one '/' in unit")
@@ -220,14 +220,14 @@ func ParseSymbol(s string) (Measurement, error) {
 			}
 			factor, uSI := u.toSI()
 			var x int
-			mSI := Measurement{factor, &uSI}
+			mSI := Quantity{factor, &uSI}
 			if match[2] != "" {
 				x, _ = strconv.Atoi(match[2])
 				if i == 1 && x < 0 {
 					return resultSI, errors.New("invalid format: negative exponent after the '/'")
 				}
 				mSI = Power(mSI, int8(x))
-				//fmt.Println("x", x, "m^x", mSI.Format("%f %s"))
+				//fmt.Println("x", x, "q^x", mSI.Format("%f %s"))
 			}
 			if i == 0 {
 				resultSI = Mult(resultSI, mSI)
@@ -246,7 +246,7 @@ func ParseSymbol(s string) (Measurement, error) {
 
 // Define can be used to add a new unit to the unit table.
 // The new unit symbol must be unique, the base symbol must either exist or be a calculation
-// based on other units, e.g. "kg.m/s2", but not necessarily SI. 1 new unit = factor * base unit.
+// based on other units, e.g. "kg.q/s2", but not necessarily SI. 1 new unit = factor * base unit.
 func Define(symbol string, factor float64, base string) (float64, error) {
 	if _, found := units[symbol]; found {
 		return 0, errors.New("duplicate symbol [" + symbol + "]")

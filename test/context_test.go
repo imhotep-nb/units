@@ -43,7 +43,7 @@ func TestContextDefinition(t *testing.T) {
 		t.Errorf("unexpected context: %v", c)
 	}
 	c = unit.Ctx(money)
-	s := c.String(unit.M(250.199, "$"))
+	s := c.String(unit.Q(250.199, "$"))
 	if s != "¤250.20" {
 		t.Error("expected ¤250.20, actual:", s)
 	}
@@ -51,20 +51,20 @@ func TestContextDefinition(t *testing.T) {
 
 func TestContextConversion(t *testing.T) {
 	height := unit.Ctx(personHeight)
-	m := height.M(1.75, "m")
-	s := height.String(m)
+	q := height.Q(1.75, "m")
+	s := height.String(q)
 	if s != "175cm" {
 		t.Error("expected 175cm, actual:", s)
 	}
-	m = unit.Add(unit.M(5, "ft"), unit.M(11, "in"))
-	s = height.String(m)
+	q = unit.Add(unit.Q(5, "ft"), unit.Q(11, "in"))
+	s = height.String(q)
 	if s != "180cm" {
 		t.Error("expected 180cm, actual:", s)
 	}
 
 	rain := unit.Ctx(rainIntensity)
-	m = rain.M(1, "in/d") // inch/day
-	s = rain.String(m)
+	q = rain.Q(1, "in/d") // inch/day
+	s = rain.String(q)
 	if s != "1.1 mm/h" {
 		t.Error("expected 1.1 mm/h, actual:", s)
 	}
@@ -76,8 +76,8 @@ func TestUnregisteredContext(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	m := unit.M(3, "bar/h")
-	s := pressureChange.String(m)
+	q := unit.Q(3, "bar/h")
+	s := pressureChange.String(q)
 	if s != "5000 Pa/min" {
 		t.Error("expected: 5000 Pa/min, actual:", s)
 	}

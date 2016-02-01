@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-// Context is a usage domain for Measurement values, it qualifies a unit,
+// Context is a usage domain for Quantity values, it qualifies a unit,
 // allowing it to be formatted differenty.
 type Context struct {
 	Name string
@@ -48,26 +48,26 @@ func DeleteContext(c *Context) {
 	delete(contexts, c.Name)
 }
 
-// M creates a new Measurement based on the Context. The value is converted to the unit defined
+// M creates a new Quantity based on the Context. The value is converted to the unit defined
 // in the Context.
-func (ctx Context) M(value float64, symbol string) Measurement {
-	m := M(value, symbol)
-	return ctx.Convert(m)
+func (ctx Context) Q(value float64, symbol string) Quantity {
+	q := Q(value, symbol)
+	return ctx.Convert(q)
 }
 
-// Convert converts a given measurement to the Context's default.
-func (ctx Context) Convert(m Measurement) Measurement {
-	return Measurement{m.value * m.factor / ctx.unit.factor, ctx.unit}
+// Convert converts a given quantity to the Context's default.
+func (ctx Context) Convert(q Quantity) Quantity {
+	return Quantity{q.value * q.factor / ctx.unit.factor, ctx.unit}
 }
 
-// Format writes a formatted version of the Measurement to the Writer.
-func (ctx Context) Format(wr io.Writer, m Measurement) {
-	ctxm := ctx.Convert(m)
+// Format writes a formatted version of the Quantity to the Writer.
+func (ctx Context) Format(wr io.Writer, q Quantity) {
+	ctxm := ctx.Convert(q)
 	fmt.Fprintf(wr, ctx.format, ctxm.Value(), ctxm.Symbol())
 }
 
-// String returns a Measurement as string, formatted with the Context format string.
-func (ctx Context) String(m Measurement) string {
-	ctxm := ctx.Convert(m)
+// String returns a Quantity as string, formatted with the Context format string.
+func (ctx Context) String(q Quantity) string {
+	ctxm := ctx.Convert(q)
 	return fmt.Sprintf(ctx.format, ctxm.Value(), ctxm.Symbol())
 }
