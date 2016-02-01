@@ -3,10 +3,10 @@ package t
 import (
 	"fmt"
 	"os"
-	"testing"
-	"unit"
 	"sort"
+	"testing"
 	"time"
+	"unit"
 )
 
 func TestPanic(t *testing.T) {
@@ -291,7 +291,6 @@ func TestParse2(t *testing.T) {
 	}
 }
 
-
 func TestSort(t *testing.T) {
 	arr := unit.MeasurementSlice{
 		unit.M(0.2, "M"),
@@ -303,7 +302,7 @@ func TestSort(t *testing.T) {
 	}
 	sort.Sort(arr)
 	sa := fmt.Sprintf("%v", arr)
-	if  sa != "[-3.0000 m -1.5000 m 0.1000 mm 0.1000 cm 4.0000 ft 0.2000 M]" {
+	if sa != "[-3.0000 m -1.5000 m 0.1000 mm 0.1000 cm 4.0000 ft 0.2000 M]" {
 		t.Error("sort error", sa)
 	}
 }
@@ -321,12 +320,12 @@ func TestDuration(t *testing.T) {
 }
 
 func TestPrefix(t *testing.T) {
-	m1 := unit.M(25 * unit.Centi, "m")
+	m1 := unit.M(25*unit.Centi, "m")
 	m2 := unit.M(25, "cm")
 	if !unit.Equal(m1, m2, unit.M(1e-6, "m")) {
 		t.Error("not equal:", m1, m2)
 	}
-	m3 := unit.M(7 * unit.Cubic(unit.Deci), "m3") 
+	m3 := unit.M(7*unit.Cubic(unit.Deci), "m3")
 	m4 := unit.M(7, "L")
 	if !unit.AreCompatible(m3, m4) || !unit.Equal(m3, m4, unit.M(1e-6, "m")) {
 		t.Error("not equal:", m3, m4)

@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	personHeight = "person height"
-	landArea = "land area"
-	money = "money"
+	personHeight  = "person height"
+	landArea      = "land area"
+	money         = "money"
 	rainIntensity = "rain intensity"
 )
 
@@ -49,7 +49,6 @@ func TestContextDefinition(t *testing.T) {
 	}
 }
 
-
 func TestContextConversion(t *testing.T) {
 	height := unit.Ctx(personHeight)
 	m := height.M(1.75, "m")
@@ -62,9 +61,9 @@ func TestContextConversion(t *testing.T) {
 	if s != "180cm" {
 		t.Error("expected 180cm, actual:", s)
 	}
-	
+
 	rain := unit.Ctx(rainIntensity)
-	m = rain.M(1, "in/d")  // inch/day
+	m = rain.M(1, "in/d") // inch/day
 	s = rain.String(m)
 	if s != "1.1 mm/h" {
 		t.Error("expected 1.1 mm/h, actual:", s)

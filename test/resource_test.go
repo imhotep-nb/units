@@ -88,4 +88,3 @@ func TestWithdrawPctContext(t *testing.T) {
 		t.Error("value withdrawn despite being invalid")
 	}
 }
-
