@@ -111,7 +111,7 @@ func setup() []*unit {
 		money("¤", 1),
 		money("$", 1),
 		money("USD", 1),
-		money("NZD", 1.57),
+		money("NZD", 1.57), // todo: use conversion table updated by function
 
 		power("W", 1), // watt
 		power("kW", 1000),

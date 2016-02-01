@@ -59,7 +59,7 @@ Here are some usage examples:
 
 // other Contexts e.g.
 	unit.DefineContext(landArea, "acre", "%0.[1]f acres")
-	unit.DefineContext(money, "$", "%[2]s%[1].2f") // unit before value
+	unit.DefineContext(money, "$", "%[2]s%.2[1]f") // unit before value
 	unit.DefineContext(rainIntensity, "mm/h", "%.1f %s")
 
 //----------

@@ -15,7 +15,7 @@ const (
 func init() {
 	unit.DefineContext(personHeight, "cm", "%.0[1]fcm")
 	unit.DefineContext(landArea, "acre", "%0.[1]f acres")
-	unit.DefineContext(money, "¤", "%[2]s%[1].2f")
+	unit.DefineContext(money, "¤", "%[2]s%.2[1]f")
 	unit.DefineContext(rainIntensity, "mm/h", "%.1f %s")
 }
 
@@ -41,6 +41,11 @@ func TestContextDefinition(t *testing.T) {
 	c = unit.Ctx(rainIntensity)
 	if c == nil || c.Name != rainIntensity || c.Symbol() != "mm/h" {
 		t.Errorf("unexpected context: %v", c)
+	}
+	c = unit.Ctx(money)
+	s := c.String(unit.M(250.199, "$"))
+	if s != "¤250.20" {
+		t.Error("expected ¤250.20, actual:", s)
 	}
 }
 
