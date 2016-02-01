@@ -1,7 +1,5 @@
 # units
-Unit system library for Go.
-
-__Please don't use in production. I'm still working on this.__
+Physical units system library for Go.
 
 One of my first pieces of Go software. I developed this to get a feel for the language, but I will keep improving this
 in 2016.
@@ -52,8 +50,58 @@ Here are some usage examples:
 	
 // parse user input
 	measurement, err := unit.Parse(" -1,234,566.88 sq in/min  ")
+	
+// create a Context for maintaining a certain unit and output formatting
+	unit.DefineContext(personHeight, "cm", "%.0[1]fcm")
+	height := unit.Ctx(personHeight)
+	m := height.M(1.75, "m")
+	s := height.String(m) // -> "175cm"
+
+// other Contexts e.g.
+	unit.DefineContext(landArea, "acre", "%0.[1]f acres")
+	unit.DefineContext(money, "$", "%[2]s%[1].2f") // unit before value
+	unit.DefineContext(rainIntensity, "mm/h", "%.1f %s")
+
+//----------
+	
+// optionally create static types like this:
+type Area struct {
+	unit.Measurement
+	*unit.Context
+}
+
+var area, _ = unit.DefineContext("landArea", "acre", "%.1f %s")
+
+func NewArea(m unit.Measurement) (Area, error) {
+	if !m.HasCompatibleUnit(area.Symbol()) {
+		return Area{}, errors.New(fmt.Sprintf("%v is not a %s", m, area.Name))
+	}
+	return Area{m, area}, nil
+}
+
+func (a Area) String() string {
+	return a.Context.String(a.Measurement)
+}
+...
+	a, err := NewArea(unit.M(2.5, "km2"))
+	fmt.Println(a.String()) // => 617.8 acre
+//----------
+
+// package units/resource
+// create a Measurement based resource with a min and max value.
+// you can Deposit and Withdraw from the resource.
+
+	rsc := resource.New(unit.M(0, "kWh"), unit.M(500, "kWh"), "")
+	rsc.Set(unit.M(25, "kWh"))
+	rsc.Withdraw(unit.M(1e6, "J"))
+	rsc.Deposit(unit.M(1.23 * unit.Kilo, "J"))	
+	b := rsc.Balance() // => 24.7226 kWh
+
+
 
 ```
+See also the 'test' folder for more examples of how to use the packages.
+
 There are more functions and methods. See `measurement.go` and `unit.go`.
 
 The units are defined in the file `data.go`. I will extend this file with more units. 
@@ -66,17 +114,15 @@ The internal storage of a unit consists of a struct with a symbol (e.g. "km/h", 
 for currency conversions, but I still have to do some work on handling dynamic factors for these (exchange rates). 
 
 
+
 ##todo
- * more tests
- * more units, the data.go only has a small set of units for testing
- * currently no support for prefixes (k for kilo, M for mega etc.) consider adding
+ * a few more units, the data.go only has a small set of units for testing
+ * change support for prefixes(k for kilo, M for mega etc.) by parsing unit
  * exchange rate handling
- * more control over formatting and decimal places; add 'contexts' e.g. height vs length
- * conversion of unit.M(x, "s") to existing time.Duration
  * add degrees/minutes/seconds parsing
  * add degrees C and F and special conversions for these (formulas are not captured by simple factor)
- * godoc documentation
- * make Measurement sortable
  * parsing/printing of unitless
+ * parsing of combined units such as "5ft 10in"
+ * resource: make safe for concurrent access by goroutines?
 
 

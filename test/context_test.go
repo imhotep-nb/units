@@ -1,7 +1,6 @@
 package t
 
 import (
-	"fmt"
 	"testing"
 	"unit"
 )
@@ -18,7 +17,6 @@ func init() {
 	unit.DefineContext(landArea, "acre", "%0.[1]f acres")
 	unit.DefineContext(money, "¤", "%[2]s%[1].2f")
 	unit.DefineContext(rainIntensity, "mm/h", "%.1f %s")
-	fmt.Println("init")
 }
 
 func TestContextDefinition(t *testing.T) {
@@ -67,4 +65,20 @@ func TestContextConversion(t *testing.T) {
 		t.Error("expected 1.1 mm/h, actual:", s)
 	}
 	// todo .Format
+}
+
+func TestUnregisteredContext(t *testing.T) {
+	pressureChange, err := unit.DefineContext("", "Pa/min", "%.0f %s")
+	if err != nil {
+		t.Error(err)
+	}
+	m := unit.M(3, "bar/h")
+	s := pressureChange.String(m)
+	if s != "5000 Pa/min" {
+		t.Error("expected: 5000 Pa/min, actual:", s)
+	}
+	ctx := unit.Ctx("")
+	if ctx != nil {
+		t.Error("should be nil:", ctx)
+	}
 }
