@@ -47,7 +47,7 @@ func (m Quantity) Split() (float64, string) {
 	return m.value, m.symbol
 }
 
-// Value returns only the value part of the Quantity. 
+// Value returns only the value part of the Quantity.
 func (m Quantity) Value() float64 {
 	return m.value
 }
@@ -65,7 +65,7 @@ func (m Quantity) ConvertTo(u string) (Quantity, bool) {
 	return Quantity{m.value / f, target}, true
 }
 
-// In returns a Quantity converted to the given unit. No unit compatibility check is 
+// In returns a Quantity converted to the given unit. No unit compatibility check is
 // performed. If the target unit is not compatible the function will return garbage.
 func (m Quantity) In(u string) Quantity {
 	target := get(u)
@@ -83,10 +83,10 @@ func Q(value float64, symbol string) Quantity {
 
 // Parse can be used to parse text input. The input is expected to contain a number
 // followed by a unit string. Whitespace between number and unit string is optional.
-// The number can have a negative sign and optional group separators (,). 
-// The unit string has to be a registered unit symbol using the dot and slash to connect 
+// The number can have a negative sign and optional group separators (,).
+// The unit string has to be a registered unit symbol using the dot and slash to connect
 // factors, numbers for exponents and optional minus signs, e.g. "-1,500 N.m/s2" =
-// -1500 newton meter per square second. This function returns the Quantity and an 
+// -1500 newton meter per square second. This function returns the Quantity and an
 // error which is nil in case the string has been correctly parsed into a Quantity.
 func Parse(s string) (Quantity, error) {
 	undef := Quantity{0, &UndefinedUnit}
@@ -147,7 +147,7 @@ func Add(a, b Quantity) Quantity {
 }
 
 // Sum adds one or more Quantities. The Quantities should have compatible units.
-// If not compatible a panic happens or garbage is returned, depending on the setting 
+// If not compatible a panic happens or garbage is returned, depending on the setting
 // of GOUNITSPANIC environment variable: 1 = panic, else no panic.
 func Sum(a Quantity, more ...Quantity) Quantity {
 	return multi(a, func(m *float64, b Quantity) { *m += b.value * b.factor }, more)
@@ -190,14 +190,14 @@ func Mult(a, b Quantity) Quantity {
 	return Quantity{a.value * a.factor * b.value * b.factor, addu(a.unit, b.unit)}
 }
 
-// Div divides the first argument by the second. A new unit will be calculated. 
+// Div divides the first argument by the second. A new unit will be calculated.
 // The returned Quantity will have SI units. Use In or ConvertTo to convert it to the desired unit.
 func Div(a, b Quantity) Quantity {
 	return Quantity{(a.value * a.factor) / (b.value * b.factor), subu(a.unit, b.unit)}
 }
 
 // Reciprocal calculates 1 divided by the given Quantity. The unit changes accordingly but
-// will be represented in SI units. 
+// will be represented in SI units.
 func Reciprocal(a Quantity) Quantity {
 	u := &unit{"", 1, negx(a.exponents)}
 	u.setSymbol()
@@ -234,7 +234,7 @@ func Abs(a Quantity) Quantity {
 }
 
 // Equal checks if two Quantities are equal. A tolerance epsilon is allowed, this value should
-// be much smaller compared to the two Quantities being compared. All arguments must have 
+// be much smaller compared to the two Quantities being compared. All arguments must have
 // compatible units.
 func Equal(a, b, epsilon Quantity) bool {
 	check(a, b)

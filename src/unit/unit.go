@@ -5,11 +5,11 @@ package unit
 import (
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
-	"math"
 )
 
 const (
@@ -83,19 +83,9 @@ type unit struct {
 	exponents []int8
 }
 
-type expMap map[int]int8
-
-func exp(u expMap) []int8 {
-	d := [len(baseSymbols)]int8{}
-	for k, v := range u {
-		d[k] = v
-	}
-	return d[:]
-}
-
-func def(exponents expMap) func(string, float64) *unit {
+func def(dim *[nBaseUnits]int8) func(string, float64) *unit {
 	return func(symbol string, factor float64) *unit {
-		return &unit{symbol, factor, exp(exponents)}
+		return &unit{symbol, factor, dim[:]}
 	}
 }
 
@@ -199,7 +189,6 @@ func (u unit) toSI() (factor float64, si unit) {
 	return u.factor, si
 }
 
-
 func ParseSymbol(s string) (Quantity, error) {
 	resultSI := Quantity{1.0, units[""]}
 	parts := strings.Split(s, "/")
@@ -242,7 +231,6 @@ func ParseSymbol(s string) (Quantity, error) {
 	//fmt.Println("final result", resultSI.value, resultSI.factor, resultSI.symbol, resultSI.exponents)
 	return resultSI, nil
 }
-
 
 // Define can be used to add a new unit to the unit table.
 // The new unit symbol must be unique, the base symbol must either exist or be a calculation

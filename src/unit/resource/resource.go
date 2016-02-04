@@ -1,9 +1,9 @@
 package resource
 
 import (
-	"unit"
 	"errors"
 	"fmt"
+	"unit"
 )
 
 // Resource is similar to an account, but can handle other values than money.
@@ -29,7 +29,7 @@ type resource struct {
 
 // New creates a new Resource with the given minimum and maximum values.
 // min should be less than max and the units should be compatible.
-// The initial balance value is set to min. A Context name can be provided, or "" 
+// The initial balance value is set to min. A Context name can be provided, or ""
 // if no Context is required.
 func New(min unit.Quantity, max unit.Quantity, context string) Resource {
 	var ctx *unit.Context
@@ -55,7 +55,7 @@ func (h *resource) Set(q unit.Quantity) bool {
 	return true
 }
 
-// Deposit adds the Measurement to the Resource. Return true for success, false for  
+// Deposit adds the Measurement to the Resource. Return true for success, false for
 // incompatible unit or out of bounds.
 func (h *resource) Deposit(q unit.Quantity) bool {
 	if !unit.AreCompatible(h.balance, q) {
@@ -83,7 +83,7 @@ func (h *resource) Withdraw(q unit.Quantity) bool {
 	return true
 }
 
-// WithdrawPct subtracts a percentage of the balance. It returns the 
+// WithdrawPct subtracts a percentage of the balance. It returns the
 // quantity that has been deducted and an error or nil if the percentage
 // is not in the range 0..100.
 func (h *resource) WithdrawPct(percentage float64) (unit.Quantity, error) {

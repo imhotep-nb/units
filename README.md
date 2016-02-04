@@ -97,7 +97,7 @@ func (a Area) String() string {
 	rsc.Deposit(unit.Q(1.23 * unit.Kilo, "J"))	
 	b := rsc.Balance() // => 24.7226 kWh
 
-
+``
 
 ```
 See also the 'test' folder for more examples of how to use the packages.
