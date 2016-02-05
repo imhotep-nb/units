@@ -4,7 +4,6 @@ import (
 	"errors"
 )
 
-
 // -- temperature ------------------------------
 
 const abszero = 273.15
@@ -20,11 +19,11 @@ func KtoF(q Quantity) (float64, error) {
 	if !q.HasCompatibleUnit("K") {
 		return 0, errors.New("not a temperature:" + q.String())
 	}
-	return (q.value - abszero) * 1.8 + 32, nil
+	return (q.value-abszero)*1.8 + 32, nil
 }
 
 func CtoF(c float64) float64 {
-	return c * 1.8 + 32
+	return c*1.8 + 32
 }
 
 func FtoC(f float64) float64 {
@@ -32,11 +31,9 @@ func FtoC(f float64) float64 {
 }
 
 func CtoK(c float64) Quantity {
-	return Q(c + abszero, "K")
+	return Q(c+abszero, "K")
 }
 
 func FtoK(f float64) Quantity {
-	return Q((f - 32) / 1.8 + abszero, "K")
+	return Q((f-32)/1.8+abszero, "K")
 }
-
-

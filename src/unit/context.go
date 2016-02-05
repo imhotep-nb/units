@@ -9,10 +9,10 @@ import (
 // Context is a usage domain for Quantity values, it qualifies a unit,
 // allowing it to be formatted differenty.
 type Context struct {
-	Name string // unique context name, except "" => do not register
-	*unit // preferred unit for values
-	format string // output format
-	formatter func (q Quantity) string // nil or conversion to be applied for String() and Format()
+	Name      string                  // unique context name, except "" => do not register
+	*unit                             // preferred unit for values
+	format    string                  // output format
+	formatter func(q Quantity) string // nil or conversion to be applied for String() and Format()
 }
 
 var contexts = make(map[string]*Context)

@@ -91,9 +91,6 @@ func setup() []*unit {
 		information("PiB", 1125899906842624),
 
 		length("m", 1), // meter, metre
-		length("cm", 0.01),
-		length("mm", 0.001),
-		length("km", 1000),
 		length("mi", 1609.344), // mile
 		length("in", 0.0254),   // inch
 		length("ft", 0.3048),   // foot
@@ -120,7 +117,6 @@ func setup() []*unit {
 		money("NZD", 1.57), // todo: use conversion table updated by function
 
 		power("W", 1), // watts
-		power("kW", 1000),
 		power("hp", 745.699872), // horsepower
 
 		pressure("Pa", 1),           // pascal
@@ -137,7 +133,6 @@ func setup() []*unit {
 		temperature("K", 1), // kelvin
 
 		voltage("V", 1), // volt
-		voltage("kV", 1000),
 
 		volume("cu ft", 35.3146665722),           // cubic foot
 		volume("L", 1e-3),                        // liter

@@ -32,26 +32,26 @@ const (
 )
 
 const (
-	Yocto = 1e-24
-	Zepto = 1e-21
-	Atto  = 1e-18
-	Femto = 1e-15
-	Pico  = 1e-12
-	Nano  = 1e-9
-	Micro = 1e-6
-	Milli = 1e-3
-	Centi = 0.01
-	Deci  = 0.1
-	Deca  = 10
-	Hecto = 100
-	Kilo  = 1e3
-	Mega  = 1e6
-	Giga  = 1e9
-	Tera  = 1e12
-	Peta  = 1e15
-	Exa   = 1e18
-	Zetta = 1e21
-	Yotta = 1e24
+	Yocto float64 = 1e-24
+	Zepto         = 1e-21
+	Atto          = 1e-18
+	Femto         = 1e-15
+	Pico          = 1e-12
+	Nano          = 1e-9
+	Micro         = 1e-6
+	Milli         = 1e-3
+	Centi         = 0.01
+	Deci          = 0.1
+	Deca          = 10
+	Hecto         = 100
+	Kilo          = 1e3
+	Mega          = 1e6
+	Giga          = 1e9
+	Tera          = 1e12
+	Peta          = 1e15
+	Exa           = 1e18
+	Zetta         = 1e21
+	Yotta         = 1e24
 )
 
 // Square can be used to apply to a SI metric prefix, e.g. unit.Square(unit.Deci)
@@ -73,6 +73,8 @@ var (
 	DefaultFormat            = "%.4f %s"
 	UndefinedUnit            = unit{"?", 0, emptyExponents()}
 	baseSymbols              = [nBaseUnits]string{"m", "kg", "K", "A", "cd", "mol", "rad", "sr", "¤", "byte", "s"}
+	prefixValues             = [...]float64{Deci, Centi, Hecto, Milli, Kilo, Micro, Mega, Nano, Giga, Pico, Tera, Femto, Peta, Atto, Exa, Zepto, Zetta, Yotta, Yocto}
+	prefixSymbols            = "dchmkuMnGpTfPaEzZyY"
 	PanicOnIncompatibleUnits = os.Getenv("GOUNITSPANIC") == "1"
 	symbolRx, muRx           *regexp.Regexp
 )
@@ -169,6 +171,45 @@ func get(symbol string) *unit {
 	return u
 }
 
+func Prefix(symbol string) (f float64, base string, ok bool) {
+	if len(symbol) < 2 {
+		return 0, "", false
+	}
+
+	switch {
+	case symbol[0] == 194 || symbol[0] == 181:
+		f = Micro
+		base = string([]rune(symbol)[1:])
+		ok = true
+	case len(symbol) > 2 && symbol[:2] == "da":
+		f = Deca
+		base = symbol[2:]
+		ok = true
+	default:
+		i := strings.IndexByte(prefixSymbols, symbol[0])
+		if i != -1 {
+			f = prefixValues[i]
+			base = symbol[1:]
+			ok = true
+		}
+	}
+	if ok {
+		u, found := units[base]
+		if found {
+			switch {
+			case u.symbol == "g":
+				f /= 1000
+				base = "kg"
+			case u.factor != 1 || strings.Contains(u.symbol, " "):
+				ok = false
+			}
+		} else {
+			ok = false
+		}
+	}
+	return
+}
+
 func haveSameExponents(x, y []int8) bool {
 	for i, _ := range x {
 		if x[i] != y[i] {
@@ -204,12 +245,18 @@ func ParseSymbol(s string) (Quantity, error) {
 				return resultSI, errors.New("cannot parse unit [" + s + "]")
 			}
 			u := units[match[1]]
+			var prefix float64 = 1
 			if u == nil {
-				return resultSI, errors.New("unknown symbol [" + match[1] + "]")
+				p, baseUnit, ok := Prefix(match[1])
+				if !ok {
+					return resultSI, errors.New("unknown symbol [" + match[1] + "]")
+				}
+				u = units[baseUnit]
+				prefix = p
 			}
 			factor, uSI := u.toSI()
 			var x int
-			mSI := Quantity{factor, &uSI}
+			mSI := Quantity{prefix * factor, &uSI}
 			if match[2] != "" {
 				x, _ = strconv.Atoi(match[2])
 				if i == 1 && x < 0 {
