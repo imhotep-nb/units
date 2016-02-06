@@ -122,7 +122,10 @@ func setup() []*unit {
 		pressure("Pa", 1),           // pascal
 		pressure("psi", 6894.75729), // pounds per square inch
 		pressure("bar", 1e5),
+		pressure("mbar", 100),  // millibar, bar is not SI unit cannot use just any prefix
+		pressure("kbar", 1e8), // kilobar
 		pressure("mmHg", 133.322387415), // millimeter mercury
+		pressure("cmHg", 1333.22387415), // centimeter mercury
 
 		solidAngle("sr", 1), // steradian
 
@@ -131,6 +134,8 @@ func setup() []*unit {
 		speed("kn", 1852/3600.0),      // knots
 
 		temperature("K", 1), // kelvin
+		temperature("degC", 1), // degree celsius, relative temperature
+		temperature("degF", 5.0/9), // degree fahrenheit, relative temperature
 
 		voltage("V", 1), // volt
 

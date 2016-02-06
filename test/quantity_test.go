@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 	"unit"
+	"math"
 )
 
 func TestPanic(t *testing.T) {
@@ -319,15 +320,92 @@ func TestDuration(t *testing.T) {
 	}
 }
 
-func TestPrefix(t *testing.T) {
-	m1 := unit.Q(25*unit.Centi, "m")
-	m2 := unit.Q(25, "cm")
-	if !unit.Equal(m1, m2, unit.Q(1e-6, "m")) {
-		t.Error("not equal:", m1, m2)
+//func TestPrefix(t *testing.T) {
+//	m1 := unit.Q(25*unit.Centi, "m")
+//	m2 := unit.Q(25, "cm")
+//	if !unit.Equal(m1, m2, unit.Q(1e-6, "m")) {
+//		t.Error("not equal:", m1, m2)
+//	}
+//	m3 := unit.Q(7*unit.Cubic(unit.Deci), "m3")
+//	m4 := unit.Q(7, "L")
+//	if !unit.AreCompatible(m3, m4) || !unit.Equal(m3, m4, unit.Q(1e-6, "m")) {
+//		t.Error("not equal:", m3, m4)
+//	}
+//}
+
+func TestKFC(t *testing.T) {
+	var k unit.Quantity
+	k = unit.Q(239.5, "K")
+	c, err := unit.KtoC(k)
+	if err != nil {
+		t.Error(err)
 	}
-	m3 := unit.Q(7*unit.Cubic(unit.Deci), "m3")
-	m4 := unit.Q(7, "L")
-	if !unit.AreCompatible(m3, m4) || !unit.Equal(m3, m4, unit.Q(1e-6, "m")) {
-		t.Error("not equal:", m3, m4)
+	if math.Abs(c - -33.65) > 1e-6 {
+		t.Error("expected: -33.65, actual:", c)
+	}
+	f, err := unit.KtoF(k)
+	if err != nil {
+		t.Error(err)
+	}	
+	if math.Abs(f - -28.57) > 1e-6 {
+		t.Error("expected: -28.57, actual:", f)
+	}	
+	f = unit.CtoF(91.833)
+	if math.Abs(f - 197.2994) > 1e-6 {
+		t.Error("expected: 197.2994, actual:", f)
+	}
+	k = unit.CtoK(38.27112)
+	if math.Abs(k.Value() - 311.42112) > 1e-6 {
+		t.Error("expected: 311.42112, actual:", k)
+	}
+	k = unit.FtoK(-1)
+	if math.Abs(k.Value() - 254.816667) > 1e-6 {
+		t.Error("expected: 254.817, actual:", k)
+	}	
+}
+
+func TestPrefix(t *testing.T) {
+	const shouldFail = 0 // magic value
+	data := []struct {
+		symbol string
+		factor float64
+	}{
+		{"km/s2", 1e3},
+		{"$/dam", 0.1},
+		{"Gs", 1e9},
+		{"nJ/ns", 1},
+		{"uA", 1e-6}, // micro-Ampere: micro "µ" -> "u"
+		{"mg", 1e-6},
+		{"dg", 1e-4},
+		{"dz", shouldFail}, // deci-z unknown unit z
+		{"kV", 1e3},
+		{"cm", 0.01},
+		{"mm-3.kg", 1e9},
+		{"mm3", 1e-9},
+		{"kHz", 1e3},
+		{"ccd", 0.01},
+		{"egg", shouldFail}, // unknown
+		{"kg/ft2", 10.763910},
+		{"um", 1e-6},        // micrometer: micro "µ" -> "u"
+		{"uft", shouldFail}, // microfeet not SI
+		{"km2", 1e6},
+		{"daN", 10},
+		{"hPa", 100},
+		{"aC", 1e-18},
+		{"mmi", shouldFail}, // millimile not SI
+		{"mbar", 100},
+	}
+	for _, x := range data {
+		q, err := unit.ParseSymbol(x.symbol)
+		if (err == nil) == (x.factor == shouldFail) {
+			t.Errorf("should fail %s: %v", x.symbol, err)
+		}
+		if err == nil {
+			si := q.ToSI()
+			if fmt.Sprintf("%.4f", si.Value()) != fmt.Sprintf("%.4f", x.factor) {
+				t.Errorf("%s: %s", x.symbol, si.Value())
+			}
+			//fmt.Println(q.Inspect())
+		}
 	}
 }

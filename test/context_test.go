@@ -3,6 +3,7 @@ package t
 import (
 	"testing"
 	"unit"
+	"bytes"
 )
 
 const (
@@ -10,6 +11,7 @@ const (
 	landArea      = "land area"
 	money         = "money"
 	rainIntensity = "rain intensity"
+	pressureDrop  = "pressure drop"
 )
 
 func init() {
@@ -17,6 +19,7 @@ func init() {
 	unit.DefineContext(landArea, "acre", "%0.[1]f acres")
 	unit.DefineContext(money, "¤", "%[2]s%.2[1]f")
 	unit.DefineContext(rainIntensity, "mm/h", "%.1f %s")
+	unit.DefineContext(pressureDrop, "hPa/km", "%.0f %s")
 }
 
 func TestContextDefinition(t *testing.T) {
@@ -66,9 +69,14 @@ func TestContextConversion(t *testing.T) {
 	q = rain.Q(1, "in/d") // inch/day
 	s = rain.String(q)
 	if s != "1.1 mm/h" {
-		t.Error("expected 1.1 mm/h, actual:", s)
+		t.Error("(String) expected 1.1 mm/h, actual:", s)
 	}
-	// todo .Format
+	var b bytes.Buffer
+	rain.Format(&b, q)
+	s = string(b.Bytes())
+	if s != "1.1 mm/h" {
+		t.Error("(Format) expected 1.1 mm/h, actual:", s)
+	}
 }
 
 func TestUnregisteredContext(t *testing.T) {
@@ -84,5 +92,12 @@ func TestUnregisteredContext(t *testing.T) {
 	ctx := unit.Ctx("")
 	if ctx != nil {
 		t.Error("should be nil:", ctx)
+	}
+	
+	ctx = unit.Ctx(pressureDrop)
+	q = ctx.Q(11, "mbar/hm")
+	s = ctx.String(q)
+	if s != "110 hPa/km" {
+		t.Error("expected 110 hPa/km, actual:", s)
 	}
 }

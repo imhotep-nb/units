@@ -10,19 +10,7 @@ import (
 // For example use for inventory, limited resources. A Resource has a min
 // and max value and guarantees the balance is between these two at all times.
 // Initially a Resource has a balance equal to the min value.
-type Resource interface {
-	Set(unit.Quantity) bool
-	Deposit(unit.Quantity) bool
-	Withdraw(unit.Quantity) bool
-	WithdrawPct(float64) (unit.Quantity, error)
-	Balance() unit.Quantity
-	Min(unit.Quantity) bool
-	Max(unit.Quantity) bool
-	Limits() (min unit.Quantity, max unit.Quantity)
-	String() string
-}
-
-type resource struct {
+type Resource struct {
 	min, max, balance unit.Quantity
 	*unit.Context
 }
@@ -31,7 +19,7 @@ type resource struct {
 // min should be less than max and the units should be compatible.
 // The initial balance value is set to min. A Context name can be provided, or ""
 // if no Context is required.
-func New(min unit.Quantity, max unit.Quantity, context string) Resource {
+func New(min unit.Quantity, max unit.Quantity, context string) *Resource {
 	var ctx *unit.Context
 	if context != "" {
 		ctx = unit.Ctx(context)
@@ -39,7 +27,7 @@ func New(min unit.Quantity, max unit.Quantity, context string) Resource {
 		ctx, _ = unit.DefineContext("", min.Symbol(), unit.DefaultFormat)
 	}
 	if unit.AreCompatible(min, max) && unit.Less(min, max) {
-		return &resource{ctx.Convert(min), ctx.Convert(max), min, ctx}
+		return &Resource{ctx.Convert(min), ctx.Convert(max), min, ctx}
 	}
 	return nil
 }
@@ -47,7 +35,7 @@ func New(min unit.Quantity, max unit.Quantity, context string) Resource {
 // Set the Resource to the given value. The value should be between the min
 // and max of the Resource. Return true for success, false for incompatible unit
 // or out of bounds.
-func (h *resource) Set(q unit.Quantity) bool {
+func (h *Resource) Set(q unit.Quantity) bool {
 	if !unit.AreCompatible(h.balance, q) || h.outOfBounds(q) {
 		return false
 	}
@@ -57,7 +45,7 @@ func (h *resource) Set(q unit.Quantity) bool {
 
 // Deposit adds the Measurement to the Resource. Return true for success, false for
 // incompatible unit or out of bounds.
-func (h *resource) Deposit(q unit.Quantity) bool {
+func (h *Resource) Deposit(q unit.Quantity) bool {
 	if !unit.AreCompatible(h.balance, q) {
 		return false
 	}
@@ -71,7 +59,7 @@ func (h *resource) Deposit(q unit.Quantity) bool {
 
 // Withdraw subtracts the given amount from the Resource.
 // Return true for success, false for incompatible unit or out of bounds
-func (h *resource) Withdraw(q unit.Quantity) bool {
+func (h *Resource) Withdraw(q unit.Quantity) bool {
 	if !unit.AreCompatible(h.balance, q) {
 		return false
 	}
@@ -86,7 +74,7 @@ func (h *resource) Withdraw(q unit.Quantity) bool {
 // WithdrawPct subtracts a percentage of the balance. It returns the
 // quantity that has been deducted and an error or nil if the percentage
 // is not in the range 0..100.
-func (h *resource) WithdrawPct(percentage float64) (unit.Quantity, error) {
+func (h *Resource) WithdrawPct(percentage float64) (unit.Quantity, error) {
 	if percentage < 0 || percentage > 100 {
 		msg := fmt.Sprintf("percentage not in range 0..1")
 		return unit.Quantity{}, errors.New(msg)
@@ -96,18 +84,18 @@ func (h *resource) WithdrawPct(percentage float64) (unit.Quantity, error) {
 	return h.Convert(taken), nil
 }
 
-func (h *resource) outOfBounds(q unit.Quantity) bool {
+func (h *Resource) outOfBounds(q unit.Quantity) bool {
 	return unit.Less(q, h.min) || unit.More(q, h.max)
 }
 
 // Balance returns the current balance.
-func (h *resource) Balance() unit.Quantity {
+func (h *Resource) Balance() unit.Quantity {
 	return h.Convert(h.balance)
 }
 
 // Min sets a new minimum balance. Returns true for success, false for incompatible unit
 // or in case the min is more than the current balance.
-func (h *resource) Min(min unit.Quantity) bool {
+func (h *Resource) Min(min unit.Quantity) bool {
 	if !unit.AreCompatible(h.balance, min) || unit.More(min, h.balance) {
 		return false
 	}
@@ -117,7 +105,7 @@ func (h *resource) Min(min unit.Quantity) bool {
 
 // Min sets a new minimum balance. Returns true for success, false for incompatible unit
 // or in case the max is less than the current balance.
-func (h *resource) Max(max unit.Quantity) bool {
+func (h *Resource) Max(max unit.Quantity) bool {
 	if !unit.AreCompatible(h.balance, max) || unit.Less(max, h.balance) {
 		return false
 	}
@@ -126,12 +114,12 @@ func (h *resource) Max(max unit.Quantity) bool {
 }
 
 // Limits returns the min and max Measurements of the resource.
-func (h *resource) Limits() (min unit.Quantity, max unit.Quantity) {
+func (h *Resource) Limits() (min unit.Quantity, max unit.Quantity) {
 	min, max = h.min, h.max
 	return
 }
 
 // String returns a string value formatted according to the Context.
-func (h resource) String() string {
+func (h Resource) String() string {
 	return h.Context.String(h.balance)
 }

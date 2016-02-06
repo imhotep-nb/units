@@ -42,6 +42,10 @@ Here are some usage examples:
 // change unit of the quantity to SI
 	t.Normalize()
 	
+// SI prefixes work on SI units (only):
+	speed := unit.Q(65, "km/h")
+	area := unit.Q(7.1, "um2") // use 'u' for micro
+	
 // math operations are Add, AddN, Subtract, SubtractN, Mult, MultF, Div, DivF, Neg, Power
 	s := unit.Add(unit.Q(3.5, "km"), unit.Q(1.2, "mi")).In("ft").String()
 	
@@ -94,10 +98,14 @@ func (a Area) String() string {
 	rsc := resource.New(unit.Q(0, "kWh"), unit.Q(500, "kWh"), "")
 	rsc.Set(unit.Q(25, "kWh"))
 	rsc.Withdraw(unit.Q(1e6, "J"))
-	rsc.Deposit(unit.Q(1.23 * unit.Kilo, "J"))	
+	rsc.Deposit(unit.Q(1.23, "kJ"))	
 	b := rsc.Balance() // => 24.7226 kWh
 
-``
+//----------
+
+// Kelvin Fahrenheit Celsius conversions 
+	var f float64 = unit.CtoF(91.833) //  91.833°C -> 197.2994°F
+	var k unit.Quantity = unit.FtoK(-1) // -1°F -> 254.816667K
 
 ```
 See also the 'test' folder for more examples of how to use the packages.
@@ -116,13 +124,9 @@ for currency conversions, but I still have to do some work on handling dynamic f
 
 
 ##todo
- * a few more units, the data.go only has a small set of units for testing
- * change support for prefixes(k for kilo, M for mega etc.) by parsing unit
- * exchange rate handling
+ * foreign exchange rate handling
  * add degrees/minutes/seconds parsing
- * add degrees C and F and special conversions for these (formulas are not captured by simple factor)
  * parsing/printing of unitless
  * parsing of combined units such as "5ft 10in"
- * resource: make safe for concurrent access by goroutines?
-
+ 
 
