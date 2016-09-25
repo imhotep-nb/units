@@ -1,4 +1,4 @@
-package unit
+package quantity
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ import (
 // The units have to be registered in the unit table with DefineUnit.
 type Quantity struct {
 	value float64
-	*unit
+	*Unit
 }
 
 // String returns a default string representation of the Quantity
@@ -34,7 +34,7 @@ func (m Quantity) Inspect() string {
 // A better way to format quantities is by using a Context.
 func (m Quantity) Format(format string) string {
 	var a, b interface{}
-	if m.unit == nil {
+	if m.Unit == nil {
 		a, b = m.value, "?"
 	} else {
 		a, b = m.value, m.symbol
@@ -52,11 +52,17 @@ func (m Quantity) Value() float64 {
 	return m.value
 }
 
+
+// Convert a quantity to another compatible unit.
+func (m Quantity) Convert(u *Unit) Quantity {
+	return Quantity{m.value * m.factor / u.factor, u}
+}
+
 // ConvertTo creates and returns a new Quantity that has undergone conversion to the given unit.
 // It also returns true/false to indicate success/failure. The conversion fails if the given unit
 // cannot be found or calculated, or if that unit is not compatible.
 func (m Quantity) ConvertTo(u string) (Quantity, bool) {
-	target := get(u)
+	target := UnitFor(u)
 	compatible := haveSameExponents(m.exponents, target.exponents)
 	if target == nil || !compatible {
 		return Quantity{}, false
@@ -68,13 +74,13 @@ func (m Quantity) ConvertTo(u string) (Quantity, bool) {
 // In returns a Quantity converted to the given unit. No unit compatibility check is
 // performed. If the target unit is not compatible the function will return garbage.
 func (m Quantity) In(u string) Quantity {
-	target := get(u)
+	target := UnitFor(u)
 	return Quantity{m.value * m.factor / target.factor, target}
 }
 
 // Q returns a Quantity with the given value and unit.
 func Q(value float64, symbol string) Quantity {
-	u := get(symbol)
+	u := UnitFor(symbol)
 	if u == &UndefinedUnit {
 		panic(fmt.Sprintf("undefined unit: %s", symbol))
 	}
@@ -108,12 +114,12 @@ func Parse(s string) (Quantity, error) {
 	if err != nil {
 		return undef, err
 	}
-	return Quantity{value, mu.unit}, nil
+	return Quantity{value, mu.Unit}, nil
 }
 
 // Invalid checks if the Quantity is valid, i.e. if it has a unit.
 func (m Quantity) Invalid() bool {
-	return m.unit == nil
+	return m.Unit == nil
 }
 
 // AreCompatible checks if two quantities are compatible. Compatibility means the exponents
@@ -123,9 +129,9 @@ func AreCompatible(a, b Quantity) bool {
 	return haveSameExponents(a.exponents, b.exponents)
 }
 
-// HasCompatibleUnit check whether the Measurment can be converted to the given unit.
+// HasCompatibleUnit check whether the Quantity can be converted to the given unit.
 func (m Quantity) HasCompatibleUnit(symbol string) bool {
-	return haveSameExponents(m.exponents, get(symbol).exponents)
+	return haveSameExponents(m.exponents, UnitFor(symbol).exponents)
 }
 
 func check(a, b Quantity) {
@@ -141,7 +147,7 @@ func check(a, b Quantity) {
 // to the desired units with methods In or ConvertTo.
 func Add(a, b Quantity) Quantity {
 	check(a, b)
-	u := &unit{"", 1, a.exponents}
+	u := &Unit{"", 1, a.exponents}
 	u.setSymbol()
 	return Quantity{a.value*a.factor + b.value*b.factor, u}
 }
@@ -174,32 +180,32 @@ func multi(
 		check(a, b)
 		op(&result, b)
 	}
-	u := &unit{"", 1, a.exponents}
+	u := &Unit{"", 1, a.exponents}
 	u.setSymbol()
 	return Quantity{result, u}
 }
 
 // Neg negates a Quantity value. The unit does not change.
 func Neg(a Quantity) Quantity {
-	return Quantity{-a.value, a.unit}
+	return Quantity{-a.value, a.Unit}
 }
 
 // Mult multiplies 2 Quantities. A new unit will be calculated. The returned Quantity will
 // have SI units. Use In or ConvertTo to convert it to the desired unit.
 func Mult(a, b Quantity) Quantity {
-	return Quantity{a.value * a.factor * b.value * b.factor, addu(a.unit, b.unit)}
+	return Quantity{a.value * a.factor * b.value * b.factor, addu(a.Unit, b.Unit)}
 }
 
 // Div divides the first argument by the second. A new unit will be calculated.
 // The returned Quantity will have SI units. Use In or ConvertTo to convert it to the desired unit.
 func Div(a, b Quantity) Quantity {
-	return Quantity{(a.value * a.factor) / (b.value * b.factor), subu(a.unit, b.unit)}
+	return Quantity{(a.value * a.factor) / (b.value * b.factor), subu(a.Unit, b.Unit)}
 }
 
 // Reciprocal calculates 1 divided by the given Quantity. The unit changes accordingly but
 // will be represented in SI units.
 func Reciprocal(a Quantity) Quantity {
-	u := &unit{"", 1, negx(a.exponents)}
+	u := &Unit{"", 1, negx(a.exponents)}
 	u.setSymbol()
 	return Quantity{1 / (a.value * a.factor), u}
 }
@@ -207,20 +213,20 @@ func Reciprocal(a Quantity) Quantity {
 // MultFac multiplies a Quantity with a factor and returns the new Quantity. The unit
 // does not change.
 func MultFac(m Quantity, f float64) Quantity {
-	return Quantity{m.value * f, m.unit}
+	return Quantity{m.value * f, m.Unit}
 }
 
 // DivFac divides a Quantity by a factor and returns the new Quantity. The unit does not
 // change.
 func DivFac(m Quantity, f float64) Quantity {
-	return Quantity{m.value / f, m.unit}
+	return Quantity{m.value / f, m.Unit}
 }
 
 // Power raises the Quantity to the given power n. The exponents of the resulting unit must
 // be in the range -128..127.
 func Power(a Quantity, n int8) Quantity {
 	calc := func(e int8) int8 { return e * n }
-	u := &unit{"", 1, mapexp(a.exponents, calc)}
+	u := &Unit{"", 1, mapexp(a.exponents, calc)}
 	u.setSymbol()
 	return Quantity{math.Pow(a.value*a.factor, float64(n)), u}
 }
@@ -263,7 +269,7 @@ func (m Quantity) ToSI() Quantity {
 // Normalize changes the Quantity to SI units.
 func (m *Quantity) Normalize() {
 	m.value *= m.factor
-	m.unit = &unit{makeSymbol(m.exponents), 1, m.exponents}
+	m.Unit = &Unit{makeSymbol(m.exponents), 1, m.exponents}
 }
 
 // Duration converts a Quantity with a duration unit to a time.Duration.
@@ -275,7 +281,7 @@ func Duration(m Quantity) (time.Duration, error) {
 	return time.Duration(0), errors.New("not a Duration: " + m.String())
 }
 
-// Slice of Quantity values. Useful for sorting.
+// Quantities is a slice of Quantity values. Useful for sorting.
 type Quantities []Quantity
 
 // Len is used by Sort

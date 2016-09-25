@@ -1,10 +1,10 @@
-package unit
+package quantity
 
 import (
 	"math"
 )
 
-func setup() []*unit {
+func setup() []*Unit {
 	// keep alphabetic order!
 	// only define quantities here that have a unit symbol that is not a combination of existing unit symbols
 	acceleration := def(&[nBaseUnits]int8{meter: 1, second: -2})
@@ -37,7 +37,7 @@ func setup() []*unit {
 	voltage := def(&[nBaseUnits]int8{meter: 2, kilogram: 1, second: -3, ampere: -1})
 	volume := def(&[nBaseUnits]int8{meter: 3})
 
-	return []*unit{
+	return []*Unit{
 		// define only basic unit symbols here, no derived symbols like m/s2, lb/cu ft
 
 		unitless("", 1),
@@ -104,6 +104,7 @@ func setup() []*unit {
 		mass("g", 0.001),           // gram
 		mass("t", 1000),            // tonne, metric ton
 		mass("lb", 0.45359237),     // pound
+		mass("lbs", 0.45359237),     // pound
 		mass("oz", 0.028349523125), // ounce avdp
 		mass("short ton", 907.18474),
 		mass("long ton", 1016.04691),

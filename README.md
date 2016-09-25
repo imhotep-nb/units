@@ -91,7 +91,7 @@ func (a Area) String() string {
 	fmt.Println(a.String()) // => 617.8 acre
 //----------
 
-// package units/resource
+// package main/resource
 // create a Quantity based resource with a min and max value.
 // you can Deposit and Withdraw from the resource.
 

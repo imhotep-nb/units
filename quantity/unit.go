@@ -1,6 +1,6 @@
-// Package unit provides a way to express and work with physical quantities, or measurements.
+// Package quantity provides a way to express and work with physical quantities, or measurements.
 // A Quantity consists of a value and a unit.
-package unit
+package quantity
 
 import (
 	"errors"
@@ -54,24 +54,29 @@ const (
 )
 
 var (
-	DefaultFormat            = "%.4f %s"
-	UndefinedUnit            = unit{"?", 0, emptyExponents()}
+	// DefaultFormat is the default formatstring for Quantities
+	DefaultFormat = "%.4f %s"
+	// UndefinedUnit represents a unit that is unknown to the system
+	UndefinedUnit = Unit{"?", 0, emptyExponents()}
+	// PanicOnIncompatibleUnits panic if operation with incompatible units happens
+	PanicOnIncompatibleUnits = os.Getenv("GOUNITSPANIC") == "1"
+
 	baseSymbols              = [nBaseUnits]string{"m", "kg", "K", "A", "cd", "mol", "rad", "sr", "¤", "byte", "s"}
 	prefixValues             = [...]float64{deci, centi, hecto, milli, kilo, micro, mega, nano, giga, pico, tera, femto, peta, atto, exa, zepto, zetta, yotta, yocto}
 	prefixSymbols            = "dchmkuMnGpTfPaEzZyY"
-	PanicOnIncompatibleUnits = os.Getenv("GOUNITSPANIC") == "1"
 	symbolRx, muRx           *regexp.Regexp
 )
 
-type unit struct {
+// Unit represents a unit of measure.
+type Unit struct {
 	symbol    string
 	factor    float64
 	exponents []int8
 }
 
-func def(dim *[nBaseUnits]int8) func(string, float64) *unit {
-	return func(symbol string, factor float64) *unit {
-		return &unit{symbol, factor, dim[:]}
+func def(dim *[nBaseUnits]int8) func(string, float64) *Unit {
+	return func(symbol string, factor float64) *Unit {
+		return &Unit{symbol, factor, dim[:]}
 	}
 }
 
@@ -83,18 +88,19 @@ func mapexp(e []int8, f func(int8) int8) []int8 {
 	return e1[:]
 }
 
-func (u *unit) Symbol() string {
+// Symbol gets the string that represents the unit
+func (u *Unit) Symbol() string {
 	return u.symbol
 }
 
-func addu(a, b *unit) *unit {
-	u := &unit{"", a.factor * b.factor, addx(a.exponents, b.exponents)}
+func addu(a, b *Unit) *Unit {
+	u := &Unit{"", a.factor * b.factor, addx(a.exponents, b.exponents)}
 	u.symbol = makeSymbol(u.exponents)
 	return u
 }
 
-func subu(a, b *unit) *unit {
-	u := &unit{"", a.factor / b.factor, addx(a.exponents, negx(b.exponents))}
+func subu(a, b *Unit) *Unit {
+	u := &Unit{"", a.factor / b.factor, addx(a.exponents, negx(b.exponents))}
 	u.symbol = makeSymbol(u.exponents)
 	return u
 }
@@ -111,12 +117,12 @@ func negx(a []int8) []int8 {
 	return mapexp(a, func(e int8) int8 { return -e })
 }
 
-func (u unit) rcp() unit {
+func (u Unit) rcp() Unit {
 	u.exponents = negx(u.exponents)
 	return u
 }
 
-func (u *unit) setSymbol() {
+func (u *Unit) setSymbol() {
 	u.symbol = makeSymbol(u.exponents)
 }
 
@@ -137,10 +143,10 @@ func makeSymbol(expon []int8) string {
 	return strings.Join(a, "")[1:]
 }
 
-var units = make(map[string]*unit)
+var units = make(map[string]*Unit)
 
-// Look up or construct a unit ref from a given symbol
-func get(symbol string) *unit {
+// UnitFor looks up or construct a unit ref from a given symbol
+func UnitFor(symbol string) *Unit {
 	u := units[symbol]
 	//fmt.Println("found in cache [", symbol, "] -> ", u)
 	if u == nil {
@@ -148,7 +154,7 @@ func get(symbol string) *unit {
 		if err != nil {
 			u = &UndefinedUnit
 		} else {
-			u = q.unit
+			u = q.Unit
 			units[u.symbol] = u // cache it
 		}
 	}
@@ -190,7 +196,7 @@ func prefix(symbol string) (f float64, base string, ok bool) {
 }
 
 func haveSameExponents(x, y []int8) bool {
-	for i, _ := range x {
+	for i := range x {
 		if x[i] != y[i] {
 			return false
 		}
@@ -203,13 +209,13 @@ func emptyExponents() []int8 {
 	return x[:]
 }
 
-func (u unit) toSI() (factor float64, si unit) {
-	si = unit{"", 1, u.exponents}
+func (u Unit) toSI() (factor float64, si Unit) {
+	si = Unit{"", 1, u.exponents}
 	si.setSymbol()
 	return u.factor, si
 }
 
-
+// ParseSymbol parses the given unit and returns a Quantity with the value set to 1.
 func ParseSymbol(s string) (Quantity, error) {
 	resultSI := Quantity{1.0, units[""]}
 	parts := strings.Split(s, "/")
@@ -271,7 +277,7 @@ func Define(symbol string, factor float64, base string) (float64, error) {
 		return 0, err
 	}
 	siFactor := factor * mBase.factor
-	units[symbol] = &unit{symbol, siFactor, mBase.exponents}
+	units[symbol] = &Unit{symbol, siFactor, mBase.exponents}
 	return siFactor, nil
 }
 

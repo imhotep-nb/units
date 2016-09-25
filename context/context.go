@@ -1,18 +1,19 @@
-package unit
+package context
 
 import (
 	"errors"
 	"fmt"
 	"io"
+	us "github.com/zn8nz/units/quantity"
 )
 
-// Context is a usage domain for Quantity values, it qualifies a unit,
+// Context is a usage domain for us.Quantity values, it qualifies a unit,
 // allowing it to be formatted differenty.
 type Context struct {
 	Name      string                  // unique context name, except "" => do not register
-	*unit                             // preferred unit for values
+	*us.Unit                             // preferred unit for values
 	format    string                  // output format
-	formatter func(q Quantity) string // nil or conversion to be applied for String() and Format()
+	formatter func(q us.Quantity) string // nil or conversion to be applied for String() and Format()
 }
 
 var contexts = make(map[string]*Context)
@@ -28,12 +29,12 @@ var contexts = make(map[string]*Context)
 // referenced in that order in the format string, then the indexes are not necessary, e.g. "%e%s".
 func DefineContext(name, unit string, format string) (*Context, error) {
 	if name == "" {
-		return &Context{"", get(unit), format, nil}, nil
+		return &Context{"", us.UnitFor(unit), format, nil}, nil
 	}
 	if _, exists := contexts[name]; exists {
 		return nil, errors.New("duplicate context: " + name)
 	}
-	ctx := &Context{name, get(unit), format, nil}
+	ctx := &Context{name, us.UnitFor(unit), format, nil}
 	contexts[name] = ctx
 	return ctx, nil
 }
@@ -49,20 +50,20 @@ func DeleteContext(c *Context) {
 	delete(contexts, c.Name)
 }
 
-// M creates a new Quantity based on the Context. The value is converted to the unit defined
+// Q creates a new us.Quantity based on the Context. The value is converted to the unit defined
 // in the Context.
-func (ctx Context) Q(value float64, symbol string) Quantity {
-	q := Q(value, symbol)
+func (ctx Context) Q(value float64, symbol string) us.Quantity {
+	q := us.Q(value, symbol)
 	return ctx.Convert(q)
 }
 
 // Convert converts a given quantity to the Context's default.
-func (ctx Context) Convert(q Quantity) Quantity {
-	return Quantity{q.value * q.factor / ctx.unit.factor, ctx.unit}
+func (ctx Context) Convert(q us.Quantity) us.Quantity {
+	return q.Convert(ctx.Unit)
 }
 
-// Format writes a formatted version of the Quantity to the Writer.
-func (ctx Context) Format(wr io.Writer, q Quantity) {
+// Format writes a formatted version of the us.Quantity to the Writer.
+func (ctx Context) Format(wr io.Writer, q us.Quantity) {
 	q1 := ctx.Convert(q)
 	if ctx.formatter != nil {
 		fmt.Fprint(wr, ctx.formatter(q1))
@@ -70,8 +71,8 @@ func (ctx Context) Format(wr io.Writer, q Quantity) {
 	fmt.Fprintf(wr, ctx.format, q1.Value(), q1.Symbol())
 }
 
-// String returns a Quantity as string, formatted with the Context format string.
-func (ctx Context) String(q Quantity) string {
+// String returns a us.Quantity as string, formatted with the Context format string.
+func (ctx Context) String(q us.Quantity) string {
 	q1 := ctx.Convert(q)
 	if ctx.formatter != nil {
 		return ctx.formatter(q1)

@@ -1,13 +1,12 @@
-package t
+package quantity
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"sort"
 	"testing"
 	"time"
-	"unit"
-	"math"
 )
 
 func TestPanic(t *testing.T) {
@@ -19,7 +18,7 @@ func TestPanic(t *testing.T) {
 				fmt.Println("TestPanic OK")
 			}
 		}()
-		unit.Add(unit.Q(10, "kph"), unit.Q(20, "V"))
+		Add(Q(10, "kph"), Q(20, "V"))
 		t.Error("TestPanic didn't work as expected")
 	}
 }
@@ -28,7 +27,7 @@ func TestInvalid(t *testing.T) {
 	defer func() {
 		recover()
 	}()
-	m := unit.Q(0, "bla")
+	m := Q(0, "bla")
 	t.Error(m.Inspect())
 }
 
@@ -56,7 +55,7 @@ func TestIn(t *testing.T) {
 		{6894.757, "Pa", "1.0000", "lbf.in-2", false},
 	}
 	for _, d := range data {
-		m1 := unit.Q(d.val, d.sym)
+		m1 := Q(d.val, d.sym)
 		if m1.Invalid() {
 			if !d.fail {
 				t.Error("source unit not found:", d.sym)
@@ -85,13 +84,13 @@ func TestIn(t *testing.T) {
 
 func TestString(t *testing.T) {
 	data := []struct {
-		input    unit.Quantity
+		input    Quantity
 		expected string
 	}{
-		{unit.Q(12.3456, "kn"), "12.3456 kn"},
-		{unit.Q(0, "kn"), "0.0000 kn"},
-		{unit.Q(-14.581699, "mph"), "-14.5817 mph"},
-		{unit.Q(0.00001, "m"), "0.0000 m"},
+		{Q(12.3456, "kn"), "12.3456 kn"},
+		{Q(0, "kn"), "0.0000 kn"},
+		{Q(-14.581699, "mph"), "-14.5817 mph"},
+		{Q(0.00001, "m"), "0.0000 m"},
 	}
 	for _, d := range data {
 		s := d.input.String()
@@ -99,22 +98,22 @@ func TestString(t *testing.T) {
 			t.Error("expected:", d.expected, "actual:", s)
 		}
 	}
-	unit.DefaultFormat = "%.0f%s"
-	if unit.Q(500.9999, "mph").String() != "501mph" {
+	DefaultFormat = "%.0f%s"
+	if Q(500.9999, "mph").String() != "501mph" {
 		t.Error("setting default format failed")
 	}
-	unit.DefaultFormat = "%.4f %s"
-	a := unit.Q(123.5, "NZD")
+	DefaultFormat = "%.4f %s"
+	a := Q(123.5, "NZD")
 	if a.String() != "123.5000 NZD" {
 		t.Error("currency formatting failed", a)
 	}
 }
 
 func TestCalc1(t *testing.T) {
-	q := unit.Q
+	q := Q
 	data := []struct {
 		op       string
-		x, y     unit.Quantity
+		x, y     Quantity
 		expected string
 	}{
 		{"+", q(10, "m"), q(8, "m"), "18.0000 m"},
@@ -123,22 +122,22 @@ func TestCalc1(t *testing.T) {
 		{"-", q(1.4, "mph"), q(3.0, "kn"), "-0.9175 m.s-1"},
 		{"*", q(2, "kg"), q(15, "m"), "30.0000 m.kg"},
 		{"/", q(9, "km"), q(2, "h"), "1.2500 m.s-1"},
-		{"1/", q(100, "m/s"), unit.Quantity{}, "0.0100 m-1.s"},
-		{"1/", q(8.0, "m"), unit.Quantity{}, "0.1250 m-1"},
+		{"1/", q(100, "m/s"), Quantity{}, "0.0100 m-1.s"},
+		{"1/", q(8.0, "m"), Quantity{}, "0.1250 m-1"},
 	}
 	for _, d := range data {
-		var result unit.Quantity
+		var result Quantity
 		switch d.op {
 		case "+":
-			result = unit.Add(d.x, d.y)
+			result = Add(d.x, d.y)
 		case "-":
-			result = unit.Subtract(d.x, d.y)
+			result = Subtract(d.x, d.y)
 		case "*":
-			result = unit.Mult(d.x, d.y)
+			result = Mult(d.x, d.y)
 		case "/":
-			result = unit.Div(d.x, d.y)
+			result = Div(d.x, d.y)
 		case "1/":
-			result = unit.Reciprocal(d.x)
+			result = Reciprocal(d.x)
 		}
 		if result.String() != d.expected {
 			t.Error("expected:", d.expected, "actual:", result)
@@ -147,10 +146,10 @@ func TestCalc1(t *testing.T) {
 }
 
 func TestCalc2(t *testing.T) {
-	q := unit.Q
+	q := Q
 	data := []struct {
 		op       string
-		q        unit.Quantity
+		q        Quantity
 		f        float64
 		expected string
 	}{
@@ -160,14 +159,14 @@ func TestCalc2(t *testing.T) {
 		{"^", q(8.4, "m"), -3, "0.0017 m-3"},
 	}
 	for _, d := range data {
-		var result unit.Quantity
+		var result Quantity
 		switch d.op {
 		case "*":
-			result = unit.MultFac(d.q, d.f)
+			result = MultFac(d.q, d.f)
 		case "/":
-			result = unit.DivFac(d.q, d.f)
+			result = DivFac(d.q, d.f)
 		case "^":
-			result = unit.Power(d.q, int8(d.f))
+			result = Power(d.q, int8(d.f))
 		}
 		if result.String() != d.expected {
 			t.Error("expected:", d.expected, "actual:", result)
@@ -176,12 +175,12 @@ func TestCalc2(t *testing.T) {
 }
 
 func TestCalc3(t *testing.T) {
-	result := unit.Sum(unit.Q(5.1, "Pa"), unit.Q(0.3, "N.m-2"), unit.Q(0.11, "m-2.N"))
+	result := Sum(Q(5.1, "Pa"), Q(0.3, "N.m-2"), Q(0.11, "m-2.N"))
 	expected := "5.5100 m-1.kg.s-2"
 	if result.String() != expected {
 		t.Error("expected:", expected, "actual:", result.String())
 	}
-	result = unit.Diff(unit.Q(100, "kph"), unit.Q(7, "mph"), unit.Q(1, "kn"))
+	result = Diff(Q(100, "kph"), Q(7, "mph"), Q(1, "kn"))
 	expected = "24.1341 m.s-1"
 	if result.String() != expected {
 		t.Error("expected:", expected, "actual:", result.String())
@@ -189,10 +188,10 @@ func TestCalc3(t *testing.T) {
 }
 
 func TestMixedUnits(t *testing.T) {
-	p1 := unit.Q(7, "N.m-2")
-	p2 := unit.Q(8, "Pa")
-	if unit.AreCompatible(p1, p2) {
-		p3 := unit.Add(p1, p2)
+	p1 := Q(7, "N.m-2")
+	p2 := Q(8, "Pa")
+	if AreCompatible(p1, p2) {
+		p3 := Add(p1, p2)
 		const result = "15.0000 m-1.kg.s-2"
 		if p3.String() != result {
 			t.Error("expected:", result, "actual:", p3)
@@ -203,44 +202,44 @@ func TestMixedUnits(t *testing.T) {
 }
 
 func TestPer(t *testing.T) {
-	p1 := unit.Q(1, "km/h")
-	p2 := unit.Q(2, "kph")
-	p3 := unit.Q(3, "m/s")
-	if !unit.AreCompatible(p1, p2) {
+	p1 := Q(1, "km/h")
+	p2 := Q(2, "kph")
+	p3 := Q(3, "m/s")
+	if !AreCompatible(p1, p2) {
 		t.Error("incompatible:", p1, "<>", p2)
 	}
-	if !unit.AreCompatible(p2, p3) {
+	if !AreCompatible(p2, p3) {
 		t.Error("incompatible:", p2, "<>", p3)
 	}
-	p4 := unit.Q(4, "kg.m/s2")
-	p5 := unit.Q(5, "N")
-	if !unit.AreCompatible(p4, p5) {
+	p4 := Q(4, "kg.m/s2")
+	p5 := Q(5, "N")
+	if !AreCompatible(p4, p5) {
 		t.Error("incompatible:", p4, "<>", p5)
 	}
-	p6 := unit.Q(6, "W")
-	p7 := unit.Q(7, "J/s")
-	if !unit.AreCompatible(p6, p7) {
+	p6 := Q(6, "W")
+	p7 := Q(7, "J/s")
+	if !AreCompatible(p6, p7) {
 		t.Error("same unit:", p6, p7)
 	}
-	p8 := unit.Subtract(unit.Q(8.8, "N.m/s"), unit.Q(8.8, "W"))
+	p8 := Subtract(Q(8.8, "N.m/s"), Q(8.8, "W"))
 	if p8.String() != "0.0000 m2.kg.s-3" {
 		t.Error()
 	}
 }
 
 func TestEqual(t *testing.T) {
-	p1 := unit.Q(999, "m")
-	p2 := unit.Q(1, "km")
-	if !unit.Equal(p1, p2, unit.Q(2, "m")) {
+	p1 := Q(999, "m")
+	p2 := Q(1, "km")
+	if !Equal(p1, p2, Q(2, "m")) {
 		t.Error("not equal: ", p1, p2)
 	}
-	if unit.Equal(p1, p2, unit.Q(1, "m")) {
+	if Equal(p1, p2, Q(1, "m")) {
 		t.Error("false equality:", p1, p2)
 	}
 }
 
 func TestNormalize(t *testing.T) {
-	p1 := unit.Q(1.2, "mph")
+	p1 := Q(1.2, "mph")
 	if p1.Value() != 1.2 || p1.Symbol() != "mph" {
 		t.Error("unit initialization error", p1)
 	}
@@ -251,18 +250,18 @@ func TestNormalize(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	p1 := unit.Q(12.4, "km.s-2")
-	p2, err := unit.Parse("12.4 km/s2")
+	p1 := Q(12.4, "km.s-2")
+	p2, err := Parse("12.4 km/s2")
 	if err != nil {
 		t.Error(err)
-	} else if !unit.Equal(p1, p2, unit.Q(0.01, "m.s-2")) {
+	} else if !Equal(p1, p2, Q(0.01, "m.s-2")) {
 		t.Error("not equal", p1, "<>", p2)
 	}
-	p3 := unit.Q(3894829.88, "sq in")
-	p4, err := unit.Parse("  3,894,829.88sq in   ")
+	p3 := Q(3894829.88, "sq in")
+	p4, err := Parse("  3,894,829.88sq in   ")
 	if err != nil {
 		t.Error(err)
-	} else if !unit.Equal(p3, p4, unit.Q(0.001, "sq in")) {
+	} else if !Equal(p3, p4, Q(0.001, "sq in")) {
 		t.Error("not equal", p3, "<>", p4)
 	}
 }
@@ -283,7 +282,7 @@ func TestParse2(t *testing.T) {
 		{"5.5.6 m", true},
 	}
 	for _, d := range data {
-		_, err := unit.Parse(d.s)
+		_, err := Parse(d.s)
 		if err != nil && !d.fail {
 			t.Error("failed but shouldn't: [", d.s, "]")
 		} else if err == nil && d.fail {
@@ -293,13 +292,13 @@ func TestParse2(t *testing.T) {
 }
 
 func TestSort(t *testing.T) {
-	arr := unit.Quantities{
-		unit.Q(0.2, "M"),
-		unit.Q(-3, "m"),
-		unit.Q(-1.5, "m"),
-		unit.Q(0.1, "cm"),
-		unit.Q(0.1, "mm"),
-		unit.Q(4, "ft"),
+	arr := Quantities{
+		Q(0.2, "M"),
+		Q(-3, "m"),
+		Q(-1.5, "m"),
+		Q(0.1, "cm"),
+		Q(0.1, "mm"),
+		Q(4, "ft"),
 	}
 	sort.Sort(arr)
 	sa := fmt.Sprintf("%v", arr)
@@ -309,9 +308,10 @@ func TestSort(t *testing.T) {
 }
 
 func TestDuration(t *testing.T) {
-	var t1 unit.Quantity = unit.Q(1.5, "d")
+	var t1 Quantity 
+	t1 = Q(1.5, "d")
 	var t2 time.Duration
-	t2, err := unit.Duration(t1)
+	t2, err := Duration(t1)
 	if err != nil {
 		t.Error(err)
 	}
@@ -321,47 +321,47 @@ func TestDuration(t *testing.T) {
 }
 
 //func TestPrefix(t *testing.T) {
-//	m1 := unit.Q(25*unit.Centi, "m")
-//	m2 := unit.Q(25, "cm")
-//	if !unit.Equal(m1, m2, unit.Q(1e-6, "m")) {
+//	m1 := Q(25*Centi, "m")
+//	m2 := Q(25, "cm")
+//	if !Equal(m1, m2, Q(1e-6, "m")) {
 //		t.Error("not equal:", m1, m2)
 //	}
-//	m3 := unit.Q(7*unit.Cubic(unit.Deci), "m3")
-//	m4 := unit.Q(7, "L")
-//	if !unit.AreCompatible(m3, m4) || !unit.Equal(m3, m4, unit.Q(1e-6, "m")) {
+//	m3 := Q(7*Cubic(Deci), "m3")
+//	m4 := Q(7, "L")
+//	if !AreCompatible(m3, m4) || !Equal(m3, m4, Q(1e-6, "m")) {
 //		t.Error("not equal:", m3, m4)
 //	}
 //}
 
 func TestKFC(t *testing.T) {
-	var k unit.Quantity
-	k = unit.Q(239.5, "K")
-	c, err := unit.KtoC(k)
+	var k Quantity
+	k = Q(239.5, "K")
+	c, err := KtoC(k)
 	if err != nil {
 		t.Error(err)
 	}
 	if math.Abs(c - -33.65) > 1e-6 {
 		t.Error("expected: -33.65, actual:", c)
 	}
-	f, err := unit.KtoF(k)
+	f, err := KtoF(k)
 	if err != nil {
 		t.Error(err)
-	}	
+	}
 	if math.Abs(f - -28.57) > 1e-6 {
 		t.Error("expected: -28.57, actual:", f)
-	}	
-	f = unit.CtoF(91.833)
-	if math.Abs(f - 197.2994) > 1e-6 {
+	}
+	f = CtoF(91.833)
+	if math.Abs(f-197.2994) > 1e-6 {
 		t.Error("expected: 197.2994, actual:", f)
 	}
-	k = unit.CtoK(38.27112)
-	if math.Abs(k.Value() - 311.42112) > 1e-6 {
+	k = CtoK(38.27112)
+	if math.Abs(k.Value()-311.42112) > 1e-6 {
 		t.Error("expected: 311.42112, actual:", k)
 	}
-	k = unit.FtoK(-1)
-	if math.Abs(k.Value() - 254.816667) > 1e-6 {
+	k = FtoK(-1)
+	if math.Abs(k.Value()-254.816667) > 1e-6 {
 		t.Error("expected: 254.817, actual:", k)
-	}	
+	}
 }
 
 func TestPrefix(t *testing.T) {
@@ -396,14 +396,14 @@ func TestPrefix(t *testing.T) {
 		{"mbar", 100},
 	}
 	for _, x := range data {
-		q, err := unit.ParseSymbol(x.symbol)
+		q, err := ParseSymbol(x.symbol)
 		if (err == nil) == (x.factor == shouldFail) {
 			t.Errorf("should fail %s: %v", x.symbol, err)
 		}
 		if err == nil {
 			si := q.ToSI()
 			if fmt.Sprintf("%.4f", si.Value()) != fmt.Sprintf("%.4f", x.factor) {
-				t.Errorf("%s: %s", x.symbol, si.Value())
+				t.Errorf("%s: %v", x.symbol, si.Value())
 			}
 			//fmt.Println(q.Inspect())
 		}

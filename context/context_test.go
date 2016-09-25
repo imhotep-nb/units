@@ -1,9 +1,9 @@
-package t
+package context
 
 import (
-	"testing"
-	"unit"
 	"bytes"
+	"testing"
+	. "github.com/zn8nz/units/quantity"
 )
 
 const (
@@ -15,57 +15,57 @@ const (
 )
 
 func init() {
-	unit.DefineContext(personHeight, "cm", "%.0[1]fcm")
-	unit.DefineContext(landArea, "acre", "%0.[1]f acres")
-	unit.DefineContext(money, "¤", "%[2]s%.2[1]f")
-	unit.DefineContext(rainIntensity, "mm/h", "%.1f %s")
-	unit.DefineContext(pressureDrop, "hPa/km", "%.0f %s")
+	DefineContext(personHeight, "cm", "%.0[1]fcm")
+	DefineContext(landArea, "acre", "%0.[1]f acres")
+	DefineContext(money, "¤", "%[2]s%.2[1]f")
+	DefineContext(rainIntensity, "mm/h", "%.1f %s")
+	DefineContext(pressureDrop, "hPa/km", "%.0f %s")
 }
 
 func TestContextDefinition(t *testing.T) {
-	c := unit.Ctx(personHeight)
+	c := Ctx(personHeight)
 	if c == nil {
 		t.Error("not found: person height")
 	}
-	c = unit.Ctx("foo")
+	c = Ctx("foo")
 	if c != nil {
 		t.Error("nil expected, actual:", c.Name)
 	}
-	unit.DefineContext("letter weight", "g", "%f %s")
-	c = unit.Ctx("letter weight")
+	DefineContext("letter weight", "g", "%f %s")
+	c = Ctx("letter weight")
 	if c == nil {
 		t.Error("not found: letter weight")
 	}
-	unit.DeleteContext(unit.Ctx("letter weight"))
-	c = unit.Ctx("letter weight")
+	DeleteContext(Ctx("letter weight"))
+	c = Ctx("letter weight")
 	if c != nil {
 		t.Error("nil expected, found: ", c.Name)
 	}
-	c = unit.Ctx(rainIntensity)
+	c = Ctx(rainIntensity)
 	if c == nil || c.Name != rainIntensity || c.Symbol() != "mm/h" {
 		t.Errorf("unexpected context: %v", c)
 	}
-	c = unit.Ctx(money)
-	s := c.String(unit.Q(250.199, "$"))
+	c = Ctx(money)
+	s := c.String(Q(250.199, "$"))
 	if s != "¤250.20" {
 		t.Error("expected ¤250.20, actual:", s)
 	}
 }
 
 func TestContextConversion(t *testing.T) {
-	height := unit.Ctx(personHeight)
+	height := Ctx(personHeight)
 	q := height.Q(1.75, "m")
 	s := height.String(q)
 	if s != "175cm" {
 		t.Error("expected 175cm, actual:", s)
 	}
-	q = unit.Add(unit.Q(5, "ft"), unit.Q(11, "in"))
+	q = Add(Q(5, "ft"), Q(11, "in"))
 	s = height.String(q)
 	if s != "180cm" {
 		t.Error("expected 180cm, actual:", s)
 	}
 
-	rain := unit.Ctx(rainIntensity)
+	rain := Ctx(rainIntensity)
 	q = rain.Q(1, "in/d") // inch/day
 	s = rain.String(q)
 	if s != "1.1 mm/h" {
@@ -80,21 +80,21 @@ func TestContextConversion(t *testing.T) {
 }
 
 func TestUnregisteredContext(t *testing.T) {
-	pressureChange, err := unit.DefineContext("", "Pa/min", "%.0f %s")
+	pressureChange, err := DefineContext("", "Pa/min", "%.0f %s")
 	if err != nil {
 		t.Error(err)
 	}
-	q := unit.Q(3, "bar/h")
+	q := Q(3, "bar/h")
 	s := pressureChange.String(q)
 	if s != "5000 Pa/min" {
 		t.Error("expected: 5000 Pa/min, actual:", s)
 	}
-	ctx := unit.Ctx("")
+	ctx := Ctx("")
 	if ctx != nil {
 		t.Error("should be nil:", ctx)
 	}
-	
-	ctx = unit.Ctx(pressureDrop)
+
+	ctx = Ctx(pressureDrop)
 	q = ctx.Q(11, "mbar/hm")
 	s = ctx.String(q)
 	if s != "110 hPa/km" {
