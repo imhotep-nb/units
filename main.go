@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"bufio"
+	"fmt"
 	"os"
-	us "github.com/zn8nz/units/quantity"
+
+	us "github.com/imhotep-nb/units/quantity"
 )
 
 // main is just simple conversion program.
