@@ -130,3 +130,5 @@ for currency conversions, but I still have to do some work on handling dynamic f
  * parsing of combined units such as "5ft 10in"
  
 
+## NOTE:
+Modifications by Imhotep team, a group of developers creating a engineering equation solver on Go language
