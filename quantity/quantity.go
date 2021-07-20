@@ -52,7 +52,6 @@ func (m Quantity) Value() float64 {
 	return m.value
 }
 
-
 // Convert a quantity to another compatible unit.
 func (m Quantity) Convert(u *Unit) Quantity {
 	return Quantity{m.value * m.factor / u.factor, u}
@@ -264,6 +263,11 @@ func Less(a, b Quantity) bool {
 func (m Quantity) ToSI() Quantity {
 	factor, u := m.toSI()
 	return Quantity{m.value * factor, &u}
+}
+
+// Dimensionality returns a vector representing the dimensionality of m
+func (m Quantity) Dimensionality() []int8 {
+	return m.exponents
 }
 
 // Normalize changes the Quantity to SI units.
