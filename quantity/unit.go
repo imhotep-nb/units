@@ -61,10 +61,10 @@ var (
 	// PanicOnIncompatibleUnits panic if operation with incompatible units happens
 	PanicOnIncompatibleUnits = os.Getenv("GOUNITSPANIC") == "1"
 
-	baseSymbols              = [nBaseUnits]string{"m", "kg", "K", "A", "cd", "mol", "rad", "sr", "¤", "byte", "s"}
-	prefixValues             = [...]float64{deci, centi, hecto, milli, kilo, micro, mega, nano, giga, pico, tera, femto, peta, atto, exa, zepto, zetta, yotta, yocto}
-	prefixSymbols            = "dchmkuMnGpTfPaEzZyY"
-	symbolRx, muRx           *regexp.Regexp
+	baseSymbols    = [nBaseUnits]string{"m", "kg", "K", "A", "cd", "mol", "rad", "sr", "¤", "byte", "s"}
+	prefixValues   = [...]float64{deci, centi, hecto, milli, kilo, micro, mega, nano, giga, pico, tera, femto, peta, atto, exa, zepto, zetta, yotta, yocto}
+	prefixSymbols  = "dchmkuMnGpTfPaEzZyY"
+	symbolRx, muRx *regexp.Regexp
 )
 
 // Unit represents a unit of measure.
@@ -217,6 +217,8 @@ func (u Unit) toSI() (factor float64, si Unit) {
 
 // ParseSymbol parses the given unit and returns a Quantity with the value set to 1.
 func ParseSymbol(s string) (Quantity, error) {
+	s = strings.ReplaceAll(s, "*", ".")
+	s = strings.ReplaceAll(s, "^", "")
 	resultSI := Quantity{1.0, units[""]}
 	parts := strings.Split(s, "/")
 	if len(parts) > 2 {
