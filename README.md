@@ -132,3 +132,4 @@ for currency conversions, but I still have to do some work on handling dynamic f
 
 ## NOTE:
 Modifications by Imhotep team, a group of developers creating a engineering equation solver on Go language
+Version 0.1.1a
